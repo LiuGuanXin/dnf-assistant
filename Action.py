@@ -1,11 +1,16 @@
+from Operate import Operate
+
 class Action:
     def __init__(self):
+        self.operate = Operate()
         pass
 
 
-    def attack(self, monster_cord):
-        # 有怪物 - 移动 攻击
-        # 没有怪物 - 移动到另一个房间
+    def attack(self, self_cord, monster_cord):
+        # 计算怪物坐标
+        self.operate.move(self_cord)
+
+
 
         # 检测是否存在怪物
 
@@ -17,7 +22,8 @@ class Action:
 
         pass
 
-    def pick_material(self):
+    def pick_material(self, self_cord, material_cord):
+
         pass
 
     def move_next(self):
