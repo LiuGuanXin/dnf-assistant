@@ -1,12 +1,12 @@
 import cv2
 import pyautogui
 import numpy as np
-from YoloPredict import YoloPredict
-from Action import Action
-from Operate import Operate
+from dnf.YoloPredict import YoloPredict
+from dnf.Action import Action
+from dnf.Operate import Operate
 
 
-yolo = YoloPredict()
+yolo = YoloPredict("../model/best.pt")
 action = Action()
 operate = Operate()
 
@@ -15,17 +15,16 @@ def screenshot(x, y, width, height):
     # 设置录制区域 (x, y, width, height)
     region = (x, y, width, height)
     # 捕获屏幕指定区域
-    img = np.array(pyautogui.screenshot(region=region))
-    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return cv2.cvtColor(np.array(pyautogui.screenshot(region=region)), cv2.COLOR_BGR2RGB)
 
 
 while True:
-    frame = screenshot(100, 100, 1000, 1000)
+    frame = screenshot(1410, 875, 1153, 500)
     yolo.deal_img(frame)
-    self_cord = yolo.get_cord(0)
-    monster_cord = yolo.get_cord(1)
-    material_cord = yolo.get_cord(2)
-    open_door_cord = yolo.get_cord(2)
+    self_cord = yolo.get_self_cord()
+    monster_cord = yolo.get_monster_cord()
+    material_cord = yolo.get_material_cord()
+    open_door_cord = yolo.get_open_door_cord()
     if monster_cord is not None and self_cord is not None:
         action.attack(self_cord, monster_cord)
     if material_cord is not None and self_cord is not None:
