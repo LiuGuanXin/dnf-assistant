@@ -84,12 +84,12 @@ def skill(key, cast_type, distance=None):
         click_and_drag(x, y, x_offset, y_offset, 0.5)
 
 
-def normal_attack(self, times):
+def normal_attack(times):
     for _ in range(times):
         press_key('M', 0.5)
 
 
-def again(self):
+def again():
     single_click(0, 0)
 
 
