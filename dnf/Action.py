@@ -3,7 +3,6 @@ import time
 import dnf.Operate as op
 import numpy as np
 
-
 # 定义多个指定区域（使用左上角和右下角的坐标）
 regions = [
     ((50, 50), (150, 150)),
@@ -11,9 +10,10 @@ regions = [
 ]
 # 与上面的区域定义对应，定义技能级别
 skill_class = {
-    1 : "h",
-    2 : 'j'
+    1: "h",
+    2: 'j'
 }
+
 
 def calculate_average_brightness(image, top_left, bottom_right):
     # 提取指定区域
@@ -21,6 +21,7 @@ def calculate_average_brightness(image, top_left, bottom_right):
     # 计算平均亮度
     average_brightness = np.mean(region)
     return average_brightness
+
 
 def move_to_cord(self_cord, dest_cord):
     # 分两步移动 分别从 x 轴和 y 轴移动
@@ -41,10 +42,12 @@ def move_to_cord(self_cord, dest_cord):
         y_direction = "up"
     op.move(direction, y_direction)
 
+
 # 捡材料
 def pick_material(self_cord, material_cord):
     for material in material_cord:
         move_to_cord(self_cord, material)
+
 
 # 攻击
 def attack(self_cord, monster_cord, img):
@@ -83,9 +86,9 @@ def attack(self_cord, monster_cord, img):
 
         # 调整面对方向 面朝怪物的方向
         if self_cord[0] >= x_mean:
-            op.move("left",5)
+            op.move("left", 5)
         else:
-            op.move("right",5)
+            op.move("right", 5)
 
         # 释放技能
         serial_list = current_skill.keys()
@@ -94,24 +97,10 @@ def attack(self_cord, monster_cord, img):
         time.sleep(1)
         op.normal_attack(3)
 
+
 # 移动到下一房间
 def move_next(self_cord, open_door_cord):
     # open_door_cord 是个列表 如何判断走哪个门？
     # 如果是固定某个地图可以记录房间，直接写死
     # 判断门的位置 控制移动
-    x_direction = open_door_cord[0][0] - self_cord[0]
-    # 判断移动方向
-    if x_direction > 0:
-        direction = "right"
-    else:
-        direction = "left"
-    op.move(direction, x_direction)
-    # 计算移动的距离
-    y_direction = open_door_cord[0][0] - self_cord[1]
-    # 判断移动方向
-    if y_direction > 0:
-        direction = "down"
-    else:
-        y_direction = "up"
-    op.move(direction, y_direction)
-
+    move_to_cord(self_cord, open_door_cord[0])
