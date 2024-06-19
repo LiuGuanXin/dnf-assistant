@@ -3,12 +3,10 @@ import pyautogui
 import numpy as np
 from dnf.YoloPredict import YoloPredict
 from dnf.Action import Action
-from dnf.Operate import Operate
 
 
 yolo = YoloPredict("../model/best.pt")
 action = Action()
-operate = Operate()
 
 
 def screenshot(x, y, width, height):

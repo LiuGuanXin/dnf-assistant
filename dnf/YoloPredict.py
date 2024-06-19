@@ -29,11 +29,11 @@ class YoloPredict:
     """获取自身坐标"""
 
     def get_self_cord(self):
-        x_min, y_min, x_max, y_max = 0, 0, 0, 0
+        x, y = 0, 0
         for item in self.data:
             if item[5] == 0 and item[4] > 0.7:
-                x_min, y_min, x_max, y_max = item[0], item[1], item[2], item[3]
-        return x_min, y_min, x_max, y_max
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
+        return x, y
 
     """获取怪物坐标"""
 
@@ -41,8 +41,8 @@ class YoloPredict:
         monster_cord_list = list()
         for item in self.data:
             if item[5] == 1 and item[4] > 0.7:
-                item = item[0:4]
-                monster_cord_list.append(item)
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
+                monster_cord_list.append([x, y])
         return monster_cord_list
 
     """获取材料坐标"""
@@ -51,8 +51,8 @@ class YoloPredict:
         material_cord_list = list()
         for item in self.data:
             if item[5] == 3 and item[4] > 0.7:
-                item = item[0:4]
-                material_cord_list.append(item)
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
+                material_cord_list.append([x, y])
         return material_cord_list
 
     """获取打开的门坐标"""
@@ -61,8 +61,8 @@ class YoloPredict:
         open_door_cord_list = list()
         for item in self.data:
             if item[5] == 4 and item[4] > 0.7:
-                item = item[0:4]
-                open_door_cord_list.append(item)
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
+                open_door_cord_list.append([x, y])
         return open_door_cord_list
 
     """获取关闭的门坐标"""
@@ -71,6 +71,6 @@ class YoloPredict:
         close_door_cord_list = list()
         for item in self.data:
             if item[5] == 2 and item[4] > 0.7:
-                item = item[0:4]
-                close_door_cord_list.append(item)
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
+            close_door_cord_list.append([x, y])
         return close_door_cord_list
