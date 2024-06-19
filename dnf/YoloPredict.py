@@ -31,12 +31,11 @@ class YoloPredict:
     """获取自身坐标"""
 
     def get_self_cord(self):
-        x, y = 0, 0
         for item in self.data:
             if item[5] == 0 and item[4] > 0.7:
                 x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
-        return x, y
-
+                return [x, y]
+        return []
     """获取怪物坐标"""
 
     def get_monster_cord(self):
@@ -74,5 +73,5 @@ class YoloPredict:
         for item in self.data:
             if item[5] == 2 and item[4] > 0.7:
                 x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
-            close_door_cord_list.append([x, y])
+                close_door_cord_list.append([x, y])
         return close_door_cord_list
