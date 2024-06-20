@@ -21,6 +21,7 @@ def press_keys(keys, press_time):
 def single_click(x, y):
     """在指定坐标进行单击"""
     pyautogui.click(x, y)
+    time.sleep(0.2)
 
 
 def click_and_hold(x, y, hold_time):
