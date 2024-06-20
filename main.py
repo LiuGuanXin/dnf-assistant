@@ -19,7 +19,7 @@ def main():
                 and len(material) != 0
                 and len(open_door) != 0):
             room_number = 1
-            act.move_next_predict(self, open_door, thumbnail_map, room_number)
+            act.move_next(self, thumbnail_map, room_number, yolo)
 
 
 if __name__ == '__main__':

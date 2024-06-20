@@ -3,6 +3,8 @@ import dnf.Operate as op
 import numpy as np
 import FrameDeal as fd
 import RoomPredict as rp
+from YoloPredict import YoloPredict
+
 
 current_room_number = 1
 
@@ -72,8 +74,22 @@ def attack(self_cord, monster_cord):
         op.normal_attack(3)
 
 
-def existence_need_door(self_cord, open_door_cord, direction):
-    return False
+def existence_need_door(open_door_cord, direction):
+    center_cord = fd.get_default_region()
+    door_dict = dict()
+    for door in open_door_cord:
+        if door[0] - center_cord[0] > 0 and door[1] - center_cord[1] > 0:
+            door_dict["up"] = door
+        elif door[0] - center_cord[0] < 0 and door[1] - center_cord[1] < 0:
+            door_dict["down"] = door
+        elif door[0] - center_cord[0] > 0 > door[1] - center_cord[1]:
+            door_dict["left"] = door
+        else:
+            door_dict["right"] = door
+    if direction in door_dict.keys():
+        return True
+    else:
+        return False
 
 
 def path_route(img) -> str:
@@ -104,7 +120,6 @@ def get_next_door_direction(thumbnail_map_cord, path_type):
         direction = rp.predict_room(img)
     elif path_type == 1:
         op.single_click(x, y)
-        # 目前已经打开了大地图 获取大地图的截图
         img = fd.screenshot(0, 0, 1920, 1080)
         direction = path_route(img)
     else:
@@ -112,19 +127,31 @@ def get_next_door_direction(thumbnail_map_cord, path_type):
     return direction
 
 
-def move_next(self_cord, open_door_cord, thumbnail_map_cord):
+def move_next(self_cord, open_door_cord, thumbnail_map_cord, model: YoloPredict):
     direction = get_next_door_direction(thumbnail_map_cord, 0)
     # 寻找下一房间的门的位置
+    # 1 检验屏幕是否有需要的门
+    if existence_need_door(open_door_cord, direction):
+        move_to_cord(self_cord, open_door_cord)
+        return
+
+    # 2 没有移动到屏幕中央  检测有没有门
+    x, y, w, h = fd.get_default_region()
+    x_center, y_center = x + w / 2, y + h / 2
+    move_to_cord(self_cord, (x_center, y_center))
+    model.predict_img(fd.screenshot(x,y, w, h))
+    if existence_need_door(model.get_open_door_cord(), direction):
+        move_to_cord(self_cord, open_door_cord)
+        return
+    # 3 没有接着向门的方向移动  循环检测 直到检测到后移动至门内
     i = 10
     while i:
+        model.predict_img(fd.screenshot(x,y, w, h))
         # 判断对应方向的门是否存在于屏幕中
-        if existence_need_door(self_cord, open_door_cord, direction):
+        if existence_need_door(model.get_open_door_cord(), direction):
             move_to_cord(self_cord, open_door_cord)
             break
         else:
-            # 首先移动到屏幕中央移动，再朝着预测的方向移动
-            x, y, w, h = fd.get_default_region()
-            x_center, y_center = x + w / 2, y + h / 2
-            move_to_cord(self_cord, (x_center, y_center))
+            # 朝着预测的方向移动
             op.move(direction, 100)
             i -= 1
