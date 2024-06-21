@@ -1,11 +1,10 @@
 import time
 import dnf.Operate as op
-import numpy as np
+from collections import deque
 import FrameDeal as fd
 import RoomPredict as rp
 from YoloPredict import YoloPredict
 import math
-import cv2
 
 current_room_number = 1
 devi = 10
@@ -141,9 +140,11 @@ def existence_need_door(open_door_cord, direction):
     else:
         return False
 
+
 import cv2
 import numpy as np
 import pyautogui
+
 
 def calculate_brightness(image):
     # 图像是 RGB 颜色空间
@@ -152,6 +153,52 @@ def calculate_brightness(image):
     b_brightness = np.mean(image[:, :, 2])
     t_brightness = np.mean(image)
     return t_brightness, r_brightness, b_brightness
+
+
+def shortest_path_directions(grid, must_pass=None):
+    if grid.size == 0:
+        return []
+
+    rows, cols = grid.shape
+    directions = [(-1, 0, 'up'), (1, 0, 'down'), (0, -1, 'left'), (0, 1, 'right')]  # 上下左右四个方向
+
+    # 找到起点和终点的位置
+    start = tuple(np.argwhere(grid == 2)[0])
+    end = tuple(np.argwhere(grid == 3)[0])
+
+    if not start or not end:
+        return []
+
+    queue = deque([(start[0], start[1], [])])  # 队列中存储 (row, col, path)
+    visited = set()
+    visited.add(start)
+
+    # 如果有必经点，将其添加到访问集合中
+    if must_pass:
+        for point in must_pass:
+            visited.add(tuple(point))
+
+    while queue:
+        r, c, path = queue.popleft()
+
+        # 如果到达终点，返回当前路径
+        if (r, c) == end:
+            return path
+
+        # 否则，继续向四个方向扩展
+        for dr, dc, dir_name in directions:
+            nr, nc = r + dr, c + dc
+
+            # 检查边界和是否访问过
+            if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
+                if grid[nr, nc] != 0 and grid[nr, nc] != 4:
+                    visited.add((nr, nc))
+                    new_path = path + [dir_name]
+                    queue.append((nr, nc, new_path))
+
+    # 如果无法到达终点，返回空列表
+    return []
+
 
 def split_image_and_calculate_brightness(screenshot, num_splits_x, num_splits_y):
     screenshot = np.array(screenshot)  # 转换为 NumPy 数组
@@ -178,7 +225,7 @@ def split_image_and_calculate_brightness(screenshot, num_splits_x, num_splits_y)
             square = screenshot[y_start:y_end, x_start:x_end]
 
             # 计算亮度
-            t_brightness, r_brightness, g_brightness  = calculate_brightness(square)
+            t_brightness, r_brightness, g_brightness = calculate_brightness(square)
 
             brightness_array[i, j] = [t_brightness, r_brightness, g_brightness]
 
@@ -197,30 +244,29 @@ def split_image_and_calculate_brightness(screenshot, num_splits_x, num_splits_y)
         room_class_array[t_x, t_y] = 2
         room_class_array[r_x, r_y] = 3
         room_class_array[b_x, b_y] = 4
-        with np.nditer(brightness_array[:, :, 0], flags=['multi_index'], op_flags=['readwrite']) as it:
+        data = brightness_array[:, :, 0]
+        with np.nditer(data, flags=['multi_index']) as it:
             for x in it:
                 idx = it.multi_index
-                # 修改值，例如将每个元素加1
-                x[...] += 1
-                print(f"data{idx} = {brightness_array[:, :, 0][idx]}")
+                if data[idx] > min_t + (max_t - min_t) * 0.1:
+                    x[...] = 1
             return brightness_array
-
-
 
 
 def path_route(img) -> str:
     # 根据 亮度 通过opencv 识别出来路径 转化为二维数组
     # 示例使用
-    num_splits_x = 4  # x轴方向切分数
-    num_splits_y = 4  # y轴方向切分数
-    brightness_array = split_image_and_calculate_brightness(img, num_splits_x, num_splits_y)
+    num_splits_x = 10  # x轴方向切分数
+    num_splits_y = 10  # y轴方向切分数
+    room_class_array = split_image_and_calculate_brightness(img, num_splits_x, num_splits_y)
     # 路线规划
-    # 获取当前位置  boss 位置
-
-    # 判断精英怪位置
-
-    # 考虑时空怪房间
-    return "up"
+    direct_list = shortest_path_directions(room_class_array)
+    global current_room_number
+    direction = direct_list[current_room_number]
+    current_room_number += 1
+    if current_room_number > len(num_direct) + 1:
+        current_room_number = 1
+    return direction
 
 
 """房间对应应该进入的门"""
