@@ -8,6 +8,11 @@ def get_default_region():
     return 1410, 875, 1153, 500
 
 
+def get_map_region():
+    x, y, w, h = get_default_region()
+    return x + w / 2, y + w / 2, w / 2, h / 2
+
+
 # 定义多个指定区域（使用左上角和右下角的坐标）
 regions = [
     ((50, 50), (150, 150)),
