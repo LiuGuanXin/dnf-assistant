@@ -5,6 +5,7 @@ import FrameDeal as fd
 import RoomPredict as rp
 from YoloPredict import YoloPredict
 import math
+import cv2
 
 current_room_number = 1
 devi = 10
@@ -140,11 +141,84 @@ def existence_need_door(open_door_cord, direction):
     else:
         return False
 
+import cv2
+import numpy as np
+import pyautogui
+
+def calculate_brightness(image):
+    # 图像是 RGB 颜色空间
+    r_brightness = np.mean(image[:, :, 0])
+    # g_brightness = np.mean(image[:, :, 1])
+    b_brightness = np.mean(image[:, :, 2])
+    t_brightness = np.mean(image)
+    return t_brightness, r_brightness, b_brightness
+
+def split_image_and_calculate_brightness(screenshot, num_splits_x, num_splits_y):
+    screenshot = np.array(screenshot)  # 转换为 NumPy 数组
+
+    height, width, _ = screenshot.shape
+
+    # 计算每个小正方形的大小
+    step_x = width // num_splits_x
+    step_y = height // num_splits_y
+
+    # 初始化结果数组
+    brightness_array = np.zeros((num_splits_y, num_splits_x, 3))
+
+    # 遍历图像，切分成小正方形并计算亮度
+    for i in range(num_splits_y):
+        for j in range(num_splits_x):
+            # 计算当前小正方形的坐标范围
+            x_start = j * step_x
+            y_start = i * step_y
+            x_end = x_start + step_x
+            y_end = y_start + step_y
+
+            # 提取当前小正方形区域
+            square = screenshot[y_start:y_end, x_start:x_end]
+
+            # 计算亮度
+            t_brightness, r_brightness, g_brightness  = calculate_brightness(square)
+
+            brightness_array[i, j] = [t_brightness, r_brightness, g_brightness]
+
+        max_t = np.max(brightness_array[:, :, 0])
+        t_x, t_y = np.argmax(max_t)
+        max_r = np.max(brightness_array[:, :, 1])
+        r_x, r_y = np.argmax(max_r)
+        max_b = np.max(brightness_array[:, :, 2])
+        b_x, b_y = np.argmax(max_b)
+        min_t = np.min(brightness_array[:, :, 0])
+        # 0 无效  1 有效房间  2 开始位置  3 结束位置  4 精英怪位置 5 时空怪位置（需要根据不同地图手动处理）
+        # 亮度的高低根据最高亮度和最低亮度定义
+
+        room_class_array = np.zeros((num_splits_y, num_splits_x))
+
+        room_class_array[t_x, t_y] = 2
+        room_class_array[r_x, r_y] = 3
+        room_class_array[b_x, b_y] = 4
+        with np.nditer(brightness_array[:, :, 0], flags=['multi_index'], op_flags=['readwrite']) as it:
+            for x in it:
+                idx = it.multi_index
+                # 修改值，例如将每个元素加1
+                x[...] += 1
+                print(f"data{idx} = {brightness_array[:, :, 0][idx]}")
+            return brightness_array
+
+
+
 
 def path_route(img) -> str:
     # 根据 亮度 通过opencv 识别出来路径 转化为二维数组
-
+    # 示例使用
+    num_splits_x = 4  # x轴方向切分数
+    num_splits_y = 4  # y轴方向切分数
+    brightness_array = split_image_and_calculate_brightness(img, num_splits_x, num_splits_y)
+    # 路线规划
     # 获取当前位置  boss 位置
+
+    # 判断精英怪位置
+
     # 考虑时空怪房间
     return "up"
 
