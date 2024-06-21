@@ -5,6 +5,7 @@ import FrameDeal as fd
 import RoomPredict as rp
 from YoloPredict import YoloPredict
 import math
+import numpy as np
 
 current_room_number = 1
 devi = 10
@@ -141,15 +142,9 @@ def existence_need_door(open_door_cord, direction):
         return False
 
 
-import cv2
-import numpy as np
-import pyautogui
-
-
 def calculate_brightness(image):
     # 图像是 RGB 颜色空间
     r_brightness = np.mean(image[:, :, 0])
-    # g_brightness = np.mean(image[:, :, 1])
     b_brightness = np.mean(image[:, :, 2])
     t_brightness = np.mean(image)
     return t_brightness, r_brightness, b_brightness
