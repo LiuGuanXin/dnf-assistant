@@ -108,12 +108,12 @@ def split_image_and_calculate_brightness(img, num_splits_x, num_splits_y):
         room_class_array[r_x, r_y] = 3
         room_class_array[b_x, b_y] = 4
         data = brightness_array[:, :, 0]
-        with np.nditer(data, flags=['multi_index']) as it:
-            for x in it:
-                idx = it.multi_index
-                if data[idx] > min_t + (max_t - min_t) * 0.1:
-                    x[...] = 1
-            return brightness_array
+        # 使用enumerate获取索引
+        for i, row in enumerate(data):
+            for j, element in enumerate(row):
+                if data[i, j] < min_t + (max_t - min_t) * 0.1:
+                    room_class_array[i, j] = 1
+        return room_class_array
 
 
 # 示例YOLO标签数据

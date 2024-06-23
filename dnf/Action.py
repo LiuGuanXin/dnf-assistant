@@ -265,13 +265,9 @@ def ana_brightness(image):
 
 def path_route(img) -> str:
     global room_class_array
-    if img is None:
-        return room_class_array[current_room_number]
-    # 获取亮度
-    t_brightness, r_brightness, g_brightness, b_brightness = ana_brightness(img)
-
+    # if img is None:
+    #     return room_class_array[current_room_number]
     # 根据 亮度 通过opencv 识别出来路径 转化为二维数组
-    # 只有刚进入的时候才会规划路径
     if len(room_class_array) == 0:
         # 示例使用
         num_splits_x = 5  # x轴方向切分数
@@ -378,7 +374,7 @@ def move_next_room(model: YoloPredict):
                         if current_room_number >= len(num_direct):
                             current_room_number = 1
                         break
-                    direct = get_next_door_direction(fd.get_map_region(), 1)
+                    direct = get_next_door_direction(fd.get_thumbnail_map(), 1)
                     next_door_cord = existence_need_door(open_door, direct)
                     print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
                     if len(next_door_cord) == 0 and len(self_cord) > 0:
