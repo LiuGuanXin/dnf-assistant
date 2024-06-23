@@ -31,49 +31,60 @@ def four_move(self_cord, dest_cord):
     op.move(direction)
 
 
-def eight_move(self_cord, dest_cord):
+def eight_move(self_cord, dest_cord, input_time=0):
     # 计算x轴差异
     x_direction = dest_cord[0] - self_cord[0]
     # 计算y轴差异
     y_direction = dest_cord[1] - self_cord[1]
     # 计算角度
-    angle = math.atan(y_direction / x_direction)
+    angle = math.degrees(math.atan(abs(y_direction / x_direction)))
     # 判断移动方向
     if x_direction > 0 and y_direction > 0:
         if 0 <= angle < 30:
-            op.move("right")
+            op.move("right", input_time)
+            print("向右移动")
         elif 30 <= angle <= 60:
-            op.move("downRight")
+            op.move("downRight", input_time)
+            print("向右下移动")
         elif 60 < angle <= 90:
-            op.move("down")
+            op.move("down", input_time)
+            print("向下移动")
     elif x_direction > 0 > y_direction:
         if 0 <= angle < 30:
-            op.move("right")
+            op.move("right", input_time)
+            print("向右移动")
         elif 30 <= angle <= 60:
-            op.move("topRight")
+            op.move("topRight", input_time)
+            print("向右上移动")
         elif 60 < angle <= 90:
-            op.move("up")
+            op.move("up", input_time)
+            print("向右上移动")
     elif x_direction < 0 < y_direction:
         if 0 <= angle < 30:
-            op.move("left")
+            op.move("left", input_time)
+            print("向左移动")
         elif 30 <= angle <= 60:
-            op.move("downLeft")
+            op.move("downLeft", input_time)
+            print("向左下移动")
         elif 60 < angle <= 90:
-            op.move("down")
+            op.move("down", input_time)
+            print("向下移动")
     elif x_direction < 0 and y_direction < 0:
         if 0 <= angle < 30:
-            op.move("left")
+            op.move("left", input_time)
+            print("向左移动")
         elif 30 <= angle <= 60:
-            op.move("topLeft")
+            op.move("topLeft", input_time)
+            print("向左上移动")
         elif 60 < angle <= 90:
-            op.move("up")
+            op.move("up", input_time)
+            print("向上移动")
 
 
 def break_condition(self_cord, dest_cord):
     x_pais = abs(dest_cord[0] - self_cord[0])
     y_pais = abs(dest_cord[1] - self_cord[1])
-    if x_pais < 300 and y_pais < 200:
-        print("拉怪完成")
+    if x_pais < 200 and y_pais < 150:
         return True
     else:
         return False
@@ -87,6 +98,8 @@ def gather_monster_move(model, direction_type=1):
         model.predict_img(img)
         self_cord = model.get_self_cord()
         dest_cord = model.get_left_monster()
+        if len(dest_cord) == 0:
+            break
         if len(self_cord) > 0 and len(dest_cord) > 0:
             if break_condition(self_cord, dest_cord):
                 break
@@ -98,28 +111,28 @@ def gather_monster_move(model, direction_type=1):
                 eight_move(self_cord, dest_cord)
 
 
-
-def move_to_cord(dest_cord, model: YoloPredict = None, direction_type=0):
-    while True:
-        if model is not None:
-            x, y, w, h = fd.get_default_region()
-            model.predict_img(fd.screenshot(x, y, w, h))
-            self_cord = model.get_self_cord()
-            if len(self_cord) > 0 and len(dest_cord) > 0:
-                if break_condition(self_cord, dest_cord):
-                    break
-                # 四方向操作
-                if direction_type == 0:
-                    four_move(self_cord, dest_cord)
-                # 八方向操作
-                elif direction_type == 1:
-                    eight_move(self_cord, dest_cord)
-
-
 # 捡材料
-def pick_material(material_cord):
-    for material in material_cord:
-        move_to_cord(material)
+def pick_material(model: YoloPredict):
+    times = 0
+    while True:
+        x, y, w, h = fd.get_default_region()
+        model.predict_img(fd.screenshot(x, y, w, h))
+        self_cord = model.get_self_cord()
+        material_cord = model.get_material_cord()
+        monster_cord = model.get_monster_cord()
+        close_door_cord = model.get_close_door_cord()
+        # 连续五次没检测到则退出
+        if (len(material_cord) == 0 or len(monster_cord) > 0
+                or len(close_door_cord) == 0):
+            if times > 3:
+                break
+            else:
+                times += 1
+        else:
+            times = 0
+        print("捡材料")
+        if len(self_cord) > 0 and len(material_cord) > 0:
+            eight_move(self_cord, material_cord[0])
 
 
 flag = 0
@@ -144,34 +157,42 @@ def attack(model: YoloPredict):
             # 根据怪物数量选择技能
             # 调整面对方向 面朝怪物的方向
             if self_cord[0] >= x_mean:
-                op.move("left")
+                op.press_key("left", 0.01)
             else:
-                op.move("right")
+                op.press_key("right", 0.01)
             # 获取可使用技能
             current_skill = fd.get_cd_skill()
             # 释放技能
             serial_list = current_skill.keys()
             random_skill = np.random.choice(list(serial_list))
-            op.skill(current_skill[random_skill], "normal")
-            op.normal_attack(3)
+            op.skill(current_skill[random_skill], "click")
 
 
-def existence_need_door(open_door_cord, direction):
+def get_direction(px, py, x, y):
+    dx = x - px
+    dy = y - py
+    if abs(dx) > abs(dy):
+        if dx > 0:
+            return 'right'
+        else:
+            return 'left'
+    else:
+        if dy > 0:
+            return 'up'
+        else:
+            return 'down'
+
+
+def existence_need_door(open_door_cord, direction) -> []:
     center_cord = fd.get_default_region()
     door_dict = dict()
     for door in open_door_cord:
-        if door[0] - center_cord[0] > 0 and door[1] - center_cord[1] > 0:
-            door_dict["up"] = door
-        elif door[0] - center_cord[0] < 0 and door[1] - center_cord[1] < 0:
-            door_dict["down"] = door
-        elif door[0] - center_cord[0] > 0 > door[1] - center_cord[1]:
-            door_dict["left"] = door
-        else:
-            door_dict["right"] = door
+        direction = get_direction(center_cord[0], center_cord[1], door[0], door[1])
+        door_dict[direction] = door
     if direction in door_dict.keys():
-        return True
+        return door_dict[direction]
     else:
-        return False
+        return []
 
 
 def calculate_brightness(image):
@@ -322,9 +343,14 @@ def path_route(img) -> str:
 """房间对应应该进入的门"""
 num_direct = {
     1: "up",
-    2: "down",
-    3: "left",
-    4: "right"
+    2: "right",
+    3: "right",
+    4: "down",
+    5: "right",
+    6: "right",
+    7: "left",
+    8: "up",
+    9: "right"
 }
 
 
@@ -332,9 +358,6 @@ num_direct = {
 def fixation():
     global current_room_number
     next_door_direction = num_direct[current_room_number]
-    current_room_number += 1
-    if current_room_number >= len(num_direct):
-        current_room_number = 1
     return next_door_direction
 
 
@@ -385,12 +408,45 @@ def move_next(model: YoloPredict):
 
 
 def move_next_room(model: YoloPredict):
+    global current_room_number
     while True:
         x, y, w, h = fd.get_default_region()
         frame = fd.screenshot(x, y, w, h)
         self, monster, material, open_door = model.get_cord(frame)
         if len(self) > 0 and len(open_door) > 0:
-            move_to_cord(open_door[0], model, 0)
+            while True:
+                if model is not None:
+                    print("移动到下一个房间")
+                    x, y, w, h = fd.get_default_region()
+                    model.predict_img(fd.screenshot(x, y, w, h))
+                    self_cord = model.get_self_cord()
+                    open_door = model.get_open_door_cord()
+                    close_door_cord = model.get_monster_cord()
+                    monster_cord = model.get_monster_cord()
+                    if len(close_door_cord) > 0 or len(monster_cord) > 0:
+                        print("已经移动到下一个房间了")
+                        current_room_number += 1
+                        print("当前房间序号：" + str(current_room_number))
+                        if current_room_number >= len(num_direct):
+                            current_room_number = 1
+                        break
+                    next_door_cord = existence_need_door(open_door, fixation())
+                    print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
+                    if len(next_door_cord) == 0 and len(self_cord) > 0:
+                        # 移动寻找门
+                        print("不存在可以进入的房间，移动寻找")
+                        x, y, w, h = fd.get_default_region()
+                        x_center, y_center = x + w / 2, y + h / 2
+                        # eight_move(self_cord, (x_center, y_center), 1)
+                        continue
+                    if len(self_cord) > 0 and len(next_door_cord) > 0:
+                        next_door_cord = open_door[0]
+                        x_pais = abs(next_door_cord[0] - self_cord[0])
+                        y_pais = abs(next_door_cord[1] - self_cord[1])
+                        if x_pais < 50 and y_pais < 50:
+                            # 已经在附近但是进不去门，需要重新进一下试试
+                            pass
+                        eight_move(self_cord, next_door_cord)
         x, y, w, h = fd.get_default_region()
         frame = fd.screenshot(x, y, w, h)
         model.predict_img(frame)

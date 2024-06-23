@@ -38,9 +38,11 @@ def click_and_drag(x, y, x_offset, y_offset, drag_time):
     pyautogui.mouseUp()
 
 
-def move(direction):
+def move(direction, input_time=0):
     # 根据距离计算按压时间
     press_time = 0.1
+    if input_time != 0:
+        press_time = input_time
     # 八方向a
     if direction == 'up':
         press_key('up', press_time)
