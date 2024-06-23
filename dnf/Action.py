@@ -135,11 +135,22 @@ def pick_material(model: YoloPredict):
             eight_move(self_cord, material_cord[0])
 
 
+def buff_skill(skill_max_lighting):
+    # 获取可使用技能
+    current_skill_list = fd.get_cd_skill(1, skill_max_lighting)
+    if len(current_skill_list) > 0:
+        for skill in current_skill_list:
+            if "W" == skill:
+                op.press_key(skill, 4)
+            elif "E" == skill:
+                op.press_key(skill, 0.2)
+
+
 flag = 0
 
 
 # 攻击
-def attack(model: YoloPredict):
+def attack(model: YoloPredict, skill_max_lighting):
     x, y, w, h = fd.get_default_region()
     model.predict_img(fd.screenshot(x, y, w, h))
     self_cord = model.get_self_cord()
@@ -151,21 +162,22 @@ def attack(model: YoloPredict):
         # 判断是否怪物在攻击范围内
         if (abs(self_cord[0] - left_x_min) < 200
                 and abs(self_cord[1] - left_y_min) < 200):
+            # 调整
             # 攻击怪物
             # 如何攻击？ 普攻 + 技能的方式
             op.normal_attack(3)
             # 根据怪物数量选择技能
             # 调整面对方向 面朝怪物的方向
             if self_cord[0] >= x_mean:
-                op.press_key("left", 0.01)
+                op.press_key("right", 0.05)
             else:
-                op.press_key("right", 0.01)
+                op.press_key("left", 0.05)
             # 获取可使用技能
-            current_skill = fd.get_cd_skill()
+            current_skill_list = fd.get_cd_skill(1, skill_max_lighting)
             # 释放技能
-            serial_list = current_skill.keys()
-            random_skill = np.random.choice(list(serial_list))
-            op.skill(current_skill[random_skill], "click")
+            if len(current_skill_list) > 0:
+                random_skill = np.random.choice(current_skill_list)
+                op.skill(random_skill, "click")
 
 
 def get_direction(px, py, x, y):
@@ -193,15 +205,6 @@ def existence_need_door(open_door_cord, direction) -> []:
         return door_dict[direction]
     else:
         return []
-
-
-def calculate_brightness(image):
-    # 图像是 RGB 颜色空间
-    r_brightness = np.mean(image[:, :, 0])
-    g_brightness = np.mean(image[:, :, 1])
-    b_brightness = np.mean(image[:, :, 2])
-    t_brightness = np.mean(image)
-    return t_brightness, r_brightness, g_brightness, b_brightness
 
 
 def shortest_path_directions(grid, must_pass=None):
@@ -249,59 +252,6 @@ def shortest_path_directions(grid, must_pass=None):
     return []
 
 
-def split_image_and_calculate_brightness(screenshot, num_splits_x, num_splits_y):
-    screenshot = np.array(screenshot)  # 转换为 NumPy 数组
-
-    height, width, _ = screenshot.shape
-
-    # 计算每个小正方形的大小
-    step_x = width // num_splits_x
-    step_y = height // num_splits_y
-
-    # 初始化结果数组
-    brightness_array = np.zeros((num_splits_y, num_splits_x, 3))
-
-    # 遍历图像，切分成小正方形并计算亮度
-    for i in range(num_splits_y):
-        for j in range(num_splits_x):
-            # 计算当前小正方形的坐标范围
-            x_start = j * step_x
-            y_start = i * step_y
-            x_end = x_start + step_x
-            y_end = y_start + step_y
-
-            # 提取当前小正方形区域
-            square = screenshot[y_start:y_end, x_start:x_end]
-
-            # 计算亮度
-            t_brightness, r_brightness, g_brightness = calculate_brightness(square)
-
-            brightness_array[i, j] = [t_brightness, r_brightness, g_brightness]
-
-        max_t = np.max(brightness_array[:, :, 0])
-        t_x, t_y = np.argmax(max_t)
-        max_r = np.max(brightness_array[:, :, 1])
-        r_x, r_y = np.argmax(max_r)
-        max_b = np.max(brightness_array[:, :, 2])
-        b_x, b_y = np.argmax(max_b)
-        min_t = np.min(brightness_array[:, :, 0])
-        # 0 无效  1 有效房间  2 开始位置  3 结束位置  4 精英怪位置 5 时空怪位置（需要根据不同地图手动处理）
-        # 亮度的高低根据最高亮度和最低亮度定义
-
-        room_class_array = np.zeros((num_splits_y, num_splits_x))
-
-        room_class_array[t_x, t_y] = 2
-        room_class_array[r_x, r_y] = 3
-        room_class_array[b_x, b_y] = 4
-        data = brightness_array[:, :, 0]
-        with np.nditer(data, flags=['multi_index']) as it:
-            for x in it:
-                idx = it.multi_index
-                if data[idx] > min_t + (max_t - min_t) * 0.1:
-                    x[...] = 1
-            return brightness_array
-
-
 room_class_array = []
 
 
@@ -315,29 +265,27 @@ def ana_brightness(image):
 
 def path_route(img) -> str:
     global room_class_array
-
+    if img is None:
+        return room_class_array[current_room_number]
     # 获取亮度
     t_brightness, r_brightness, g_brightness, b_brightness = ana_brightness(img)
-    print(t_brightness)
-    print(r_brightness)
-    print(g_brightness)
-    print(b_brightness)
+
     # 根据 亮度 通过opencv 识别出来路径 转化为二维数组
     # 只有刚进入的时候才会规划路径
-    # if len(room_class_array) == 0:
-    #     # 示例使用
-    #     num_splits_x = 10  # x轴方向切分数
-    #     num_splits_y = 10  # y轴方向切分数
-    #     room_class_array = split_image_and_calculate_brightness(img, num_splits_x, num_splits_y)
-    # # 路线规划
-    # direct_list = shortest_path_directions(room_class_array)
-    # global current_room_number
-    # direction = direct_list[current_room_number]
-    # current_room_number += 1
-    # if current_room_number > len(num_direct) + 1:
-    #     current_room_number = 1
-    #     room_class_array = []
-    # return direction
+    if len(room_class_array) == 0:
+        # 示例使用
+        num_splits_x = 5  # x轴方向切分数
+        num_splits_y = 4  # y轴方向切分数
+        room_class_array = fd.split_image_and_calculate_brightness(img, num_splits_x, num_splits_y)
+    # 路线规划
+    direct_list = shortest_path_directions(room_class_array)
+    global current_room_number
+    direction = direct_list[current_room_number]
+    current_room_number += 1
+    if current_room_number > len(num_direct) + 1:
+        current_room_number = 1
+        room_class_array = []
+    return direction
 
 
 """房间对应应该进入的门"""
@@ -430,7 +378,8 @@ def move_next_room(model: YoloPredict):
                         if current_room_number >= len(num_direct):
                             current_room_number = 1
                         break
-                    next_door_cord = existence_need_door(open_door, fixation())
+                    direct = get_next_door_direction(fd.get_map_region(), 1)
+                    next_door_cord = existence_need_door(open_door, direct)
                     print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
                     if len(next_door_cord) == 0 and len(self_cord) > 0:
                         # 移动寻找门
