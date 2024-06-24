@@ -315,87 +315,41 @@ def get_next_door_direction(mag_img, path_type):
     return direction
 
 
-def move_next(model: YoloPredict):
-    # thumbnail_map = fd.get_thumbnail_map()
-    # direction = get_next_door_direction(thumbnail_map, 0)
-    #
-    # x, y, w, h = fd.get_default_region()
-    # frame = fd.screenshot(x, y, w, h)
-    # self, monster, material, open_door = model.get_cord(frame)
-    #
-    # # 寻找下一个房间的门的位置
-    # # 1 检验屏幕是否有需要的门
-    # if existence_need_door(open_door_cord, direction):
-    #     move_to_cord(self_cord, open_door_cord)
-    #     return
-    # # 2 没有移动到屏幕中央  检测有没有门
-    # x, y, w, h = fd.get_default_region()
-    # x_center, y_center = x + w / 2, y + h / 2
-    # move_to_cord(self_cord, (x_center, y_center))
-    # model.predict_img(fd.screenshot(x, y, w, h))
-    # if existence_need_door(model.get_open_door_cord(), direction):
-    #     move_to_cord(self_cord, open_door_cord)
-    #     return
-    # # 3 没有接着向门的方向移动  循环检测 直到检测到后移动至门内
-    # i = 10
-    # while i:
-    #     model.predict_img(fd.screenshot(x, y, w, h))
-    #     # 判断对应方向的门是否存在于屏幕中
-    #     if existence_need_door(model.get_open_door_cord(), direction):
-    #         move_to_cord(self_cord, open_door_cord)
-    #         break
-    #     else:
-    #         # 朝着预测的方向移动
-    #         op.move(direction, 100)
-    #         i -= 1
-    pass
-
-
 def move_next_room(model: YoloPredict):
     global current_room_number
-    while True:
-        x, y, w, h = fd.get_default_region()
-        frame = fd.screenshot(x, y, w, h)
-        self, monster, material, open_door = model.get_cord(frame)
-        if len(self) > 0 and len(open_door) > 0:
-            while True:
-                if model is not None:
-                    print("移动到下一个房间")
-                    x, y, w, h = fd.get_default_region()
-                    model.predict_img(fd.screenshot(x, y, w, h))
-                    self_cord = model.get_self_cord()
-                    open_door = model.get_open_door_cord()
-                    close_door_cord = model.get_monster_cord()
-                    monster_cord = model.get_monster_cord()
-                    if len(close_door_cord) > 0 or len(monster_cord) > 0:
-                        print("已经移动到下一个房间了")
-                        current_room_number += 1
-                        print("当前房间序号：" + str(current_room_number))
-                        if current_room_number >= len(num_direct):
-                            current_room_number = 1
-                        break
-                    direct = get_next_door_direction(fd.get_thumbnail_map(), 1)
-                    next_door_cord = existence_need_door(open_door, direct)
-                    print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
-                    if len(next_door_cord) == 0 and len(self_cord) > 0:
-                        # 移动寻找门
-                        print("不存在可以进入的房间，移动寻找")
-                        x, y, w, h = fd.get_default_region()
-                        x_center, y_center = x + w / 2, y + h / 2
-                        # eight_move(self_cord, (x_center, y_center), 1)
-                        continue
-                    if len(self_cord) > 0 and len(next_door_cord) > 0:
-                        next_door_cord = open_door[0]
-                        x_pais = abs(next_door_cord[0] - self_cord[0])
-                        y_pais = abs(next_door_cord[1] - self_cord[1])
-                        if x_pais < 50 and y_pais < 50:
-                            # 已经在附近但是进不去门，需要重新进一下试试
-                            pass
-                        eight_move(self_cord, next_door_cord)
-        x, y, w, h = fd.get_default_region()
-        frame = fd.screenshot(x, y, w, h)
-        model.predict_img(frame)
-        close_door_cord = model.get_close_door_cord()
-        monster_cord = model.get_monster_cord()
-        if len(close_door_cord) > 0 or len(monster_cord) > 0:
-            break
+    x, y, w, h = fd.get_default_region()
+    frame = fd.screenshot(x, y, w, h)
+    self, _, _, open_door = model.get_cord(frame)
+    if len(self) > 0 and len(open_door) > 0:
+        while True:
+            print("移动到下一个房间")
+            x, y, w, h = fd.get_default_region()
+            self_cord, monster_cord, _, open_door = model.get_cord(fd.screenshot(x, y, w, h))
+            close_door_cord = model.get_monster_cord()
+            if len(close_door_cord) > 0 or len(monster_cord) > 0:
+                print("已经移动到下一个房间了")
+                current_room_number += 1
+                print("当前房间序号：" + str(current_room_number))
+                if current_room_number >= len(num_direct):
+                    current_room_number = 1
+                break
+            direct = get_next_door_direction(fd.get_thumbnail_map(), 1)
+            next_door_cord = existence_need_door(open_door, direct)
+            print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
+            if len(next_door_cord) == 0 and len(self_cord) > 0:
+                # 移动寻找门
+                print("不存在可以进入的房间，移动寻找")
+                x, y, w, h = fd.get_default_region()
+                # x_center, y_center = x + w / 2, y + h / 2
+                # eight_move(self_cord, (x_center, y_center), 1)
+                continue
+            if len(self_cord) > 0 and len(next_door_cord) > 0:
+                next_door_cord = open_door[0]
+                x_pais = abs(next_door_cord[0] - self_cord[0])
+                y_pais = abs(next_door_cord[1] - self_cord[1])
+                if x_pais < 50 and y_pais < 50:
+                    # 已经在附近但是进不去门，需要重新进一下试试
+                    pass
+                eight_move(self_cord, next_door_cord)
+
+

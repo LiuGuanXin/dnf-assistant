@@ -13,10 +13,10 @@ def get_default_region():
 
 def get_map_region():
     x, y, image_width, image_height = get_default_region()
-    x_center, y_center, width, height = data = [0.496097, 0.511000, 0.220295, 0.406000]
+    x_center, y_center, width, height = [0.496097, 0.511000, 0.220295, 0.406000]
     # 计算左上角坐标
-    x_min = (x_center - width / 2) * image_width
-    y_min = (y_center - height / 2) * image_height
+    x_min = x + (x_center - width / 2) * image_width
+    y_min = y + (y_center - height / 2) * image_height
     # 计算宽度和高度
     w = width * image_width
     h = height * image_height
@@ -30,6 +30,21 @@ def get_thumbnail_map() -> []:
     img = screenshot(x, y, w, h)
     # 获取亮度
     return img
+
+
+def get_thumbnail_map_v2() -> []:
+    press_key("M", 0.5)
+    time.sleep(2)
+    x, y, w, h = get_default_region()
+    img = screenshot(x, y, w, h)
+    x_center, y_center, width, height = [0.496097, 0.511000, 0.220295, 0.406000]
+    x_m = (x_center - width / 2) * w
+    y_m = (y_center - height / 2) * h
+    # 计算宽度和高度
+    w_m = width * w
+    h_m = height * h
+    # 获取亮度
+    return img[int(y_m):int(y_m + h_m), int(x_m):int(x_m + w_m)]
 
 
 # 技能按键
@@ -90,16 +105,18 @@ def split_image_and_calculate_brightness(img, num_splits_x, num_splits_y):
             # 计算亮度
             t_brightness, r_brightness, g_brightness, b_brightness = calculate_brightness(square)
 
-            brightness_array[i, j] = [t_brightness, r_brightness, g_brightness]
+            brightness_array[i, j] = [t_brightness, r_brightness, g_brightness, b_brightness]
 
         max_t = np.max(brightness_array[:, :, 0])
         t_x, t_y = np.argmax(max_t)
         max_r = np.max(brightness_array[:, :, 1])
         r_x, r_y = np.argmax(max_r)
-        max_b = np.max(brightness_array[:, :, 2])
+        max_g = np.max(brightness_array[:, :, 2])
+        g_x, g_y = np.argmax(max_g)
+        max_b = np.min(brightness_array[:, :, 3])
         b_x, b_y = np.argmax(max_b)
         min_t = np.min(brightness_array[:, :, 0])
-        # 0 无效  1 有效房间  2 开始位置  3 结束位置  4 精英怪位置 5 时空怪位置（需要根据不同地图手动处理）
+        # 0 无效  1 有效房间  2 开始位置  3 结束位置  4 精英怪位置 5 补给位置 6 时空怪位置（需要根据不同地图手动处理）
         # 亮度的高低根据最高亮度和最低亮度定义
 
         room_class_array = np.zeros((num_splits_y, num_splits_x))
@@ -107,6 +124,7 @@ def split_image_and_calculate_brightness(img, num_splits_x, num_splits_y):
         room_class_array[t_x, t_y] = 2
         room_class_array[r_x, r_y] = 3
         room_class_array[b_x, b_y] = 4
+        room_class_array[g_x, g_y] = 5
         data = brightness_array[:, :, 0]
         # 使用enumerate获取索引
         for i, row in enumerate(data):
