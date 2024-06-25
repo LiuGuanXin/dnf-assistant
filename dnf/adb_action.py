@@ -305,17 +305,26 @@ def get_next_door_direction(mag_img, path_type):
         direction = fixation()
     return direction
 
+    min_door = get_min_door(open_door_list)
+    reversal = reversal_direct(direct)
+def get_min_door(open_door_list: list) -> []:
+    pass
+
+
+def reversal_direct(direct: str) -> str:
+    if direct == "up":
+        return "down"
+
+
+
 
 def move_next_room(model: YoloPredict):
     global current_room_number
-    x, y, w, h = fd.get_default_region()
-    frame = fd.screenshot(x, y, w, h)
-    self, _, _, open_door = model.get_cord(frame)
+    self, _, _, open_door = model.get_cord(at.take_screenshot(device_id))
     if len(self) > 0 and len(open_door) > 0:
         while True:
             print("移动到下一个房间")
-            x, y, w, h = fd.get_default_region()
-            self_cord, monster_cord, _, open_door = model.get_cord(fd.screenshot(x, y, w, h))
+            self_cord, monster_cord, _, open_door = model.get_cord(at.take_screenshot(device_id))
             close_door_cord = model.get_monster_cord()
             if len(close_door_cord) > 0 or len(monster_cord) > 0:
                 print("已经移动到下一个房间了")
@@ -338,6 +347,19 @@ def move_next_room(model: YoloPredict):
                 next_door_cord = open_door[0]
                 x_pais = abs(next_door_cord[0] - self_cord[0])
                 y_pais = abs(next_door_cord[1] - self_cord[1])
+                # 寻找到可以进入的房间后记录与可以进入房间的距离
+                # 如果距离小于一定值 开始检测当前距离最近的门的方向是否发生了改变
+                # 如果发生了改变则跳出循环进入下一个房间
+                if x_pais < 150 and y_pais < 150:
+                    model.predict_img(at.take_screenshot(device_id))
+                    self_cord = model.get_self_cord()
+                    open_door_list = model.get_open_door_cord()
+                    if len(open_door_list) > 0 and len(self_cord) > 0:
+                        min_door = get_min_door(open_door_list)
+                        reversal = reversal_direct(direct)
+                        if get_direction(self_cord, min_door) == reversal:
+                            break
+
                 if x_pais < 50 and y_pais < 50:
                     # 已经在附近但是进不去门，需要重新进一下试试
                     pass
