@@ -7,6 +7,7 @@ from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
 from PyQt5.QtCore import Qt, QPoint
 from PIL import Image
 
+
 class ScreenMirror(QWidget):
     def __init__(self):
         super().__init__()
@@ -116,6 +117,7 @@ class ScreenMirror(QWidget):
         self.click_y_input.setText(str(self.click_coords.y()))
         self.get_coords_button.setText("获取点击坐标")
         self.screen_label.mousePressEvent = lambda event: None  # 恢复默认点击事件
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -1,11 +1,11 @@
-import time
 import dnf.Operate as op
 from collections import deque
 import dnf.FrameDeal as fd
-import dnf.RoomPredict as rp
 from dnf.YoloPredict import YoloPredict
 import math
 import numpy as np
+
+from tools.image_detect import get_cd_skill
 
 current_room_number = 1
 devi = 300
@@ -137,7 +137,7 @@ def pick_material(model: YoloPredict):
 
 def buff_skill(skill_max_lighting):
     # 获取可使用技能
-    current_skill_list = fd.get_cd_skill(1, skill_max_lighting)
+    current_skill_list = get_cd_skill(1, skill_max_lighting)
     if len(current_skill_list) > 0:
         for skill in current_skill_list:
             if "W" == skill:
@@ -173,7 +173,7 @@ def attack(model: YoloPredict, skill_max_lighting):
             else:
                 op.press_key("left", 0.05)
             # 获取可使用技能
-            current_skill_list = fd.get_cd_skill(1, skill_max_lighting)
+            current_skill_list = get_cd_skill(1, skill_max_lighting)
             # 释放技能
             if len(current_skill_list) > 0:
                 random_skill = np.random.choice(current_skill_list)
@@ -306,9 +306,7 @@ def fixation():
 
 
 def get_next_door_direction(mag_img, path_type):
-    if path_type == 0:
-        direction = rp.predict_room(mag_img)
-    elif path_type == 1:
+    if path_type == 1:
         direction = path_route(mag_img)
     else:
         direction = fixation()
@@ -339,7 +337,7 @@ def move_next_room(model: YoloPredict):
             if len(next_door_cord) == 0 and len(self_cord) > 0:
                 # 移动寻找门
                 print("不存在可以进入的房间，移动寻找")
-                x, y, w, h = fd.get_default_region()
+                # x, y, w, h = fd.get_default_region()
                 # x_center, y_center = x + w / 2, y + h / 2
                 # eight_move(self_cord, (x_center, y_center), 1)
                 continue
@@ -351,5 +349,3 @@ def move_next_room(model: YoloPredict):
                     # 已经在附近但是进不去门，需要重新进一下试试
                     pass
                 eight_move(self_cord, next_door_cord)
-
-
