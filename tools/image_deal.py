@@ -1,10 +1,8 @@
-# 主要用于处理录屏的帧
 import time
-from dnf.Operate import press_key
+from dnf.keword_operate import press_key
 import cv2
 import pyautogui
 import numpy as np
-from dnf.YoloPredict import YoloPredict
 
 """ 截取指定区域的屏幕 """
 

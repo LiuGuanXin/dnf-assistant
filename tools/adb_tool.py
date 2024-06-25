@@ -1,5 +1,7 @@
 import subprocess
 import time
+import numpy as np
+import cv2
 
 
 def execute_adb_command(command):
@@ -15,25 +17,31 @@ def execute_adb_command(command):
 
 def take_screenshot(device_id=None):
     """
-    Take a screenshot from an Android device and pull it to the local machine.
-    """
-    screenshot_path_on_device = "/sdcard/screenshot.png"
-    screenshot_path_local = "screenshot.png"
-
-    # Construct the adb commands
+     Take a screenshot from an Android device and process it using OpenCV.
+     """
     adb_command = "adb"
     if device_id:
         adb_command += f" -s {device_id}"
-
-    screencap_command = f"{adb_command} shell screencap -p {screenshot_path_on_device}"
-    pull_command = f"{adb_command} pull {screenshot_path_on_device} {screenshot_path_local}"
-
-    # Execute the commands
+    screencap_command = f"{adb_command} shell screencap -p"
+    # Execute the command and get the raw image data
     print("Taking screenshot...")
-    execute_adb_command(screencap_command)
-    print("Pulling screenshot to local machine...")
-    execute_adb_command(pull_command)
-    print(f"Screenshot saved as {screenshot_path_local}")
+    raw_image = execute_adb_command(screencap_command)
+    # Convert the raw image data to a numpy array
+    image_array = np.frombuffer(raw_image, dtype=np.uint8)
+    # Decode the image array to an OpenCV image
+    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    if image is None:
+        print("Failed to decode image")
+        return
+    # Process the image using OpenCV
+    print("Processing the screenshot with OpenCV...")
+    # Example processing: Convert to grayscale
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Display the image
+    # cv2.imshow('Screenshot', image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return image
 
 
 def tap_screen(x, y, device_id=None):
@@ -48,6 +56,22 @@ def tap_screen(x, y, device_id=None):
 
     # Execute the command
     print(f"Tapping on screen at ({x}, {y})...")
+    execute_adb_command(tap_command)
+
+
+def tap_screen_time(x, y, duration_ms=100, device_id=None):
+    """
+    Simulate a tap on the Android device at the specified (x, y) coordinates with a specified duration.
+    """
+    adb_command = "adb"
+    if device_id:
+        adb_command += f" -s {device_id}"
+
+    # The swipe command with the same start and end points can be used to control the tap duration
+    tap_command = f"{adb_command} shell input swipe {x} {y} {x} {y} {duration_ms}"
+
+    # Execute the command
+    print(f"Tapping on screen at ({x}, {y}) for {duration_ms} milliseconds...")
     execute_adb_command(tap_command)
 
 

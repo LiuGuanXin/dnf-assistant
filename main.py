@@ -1,8 +1,8 @@
-from dnf.FrameDeal import screenshot
-from dnf.FrameDeal import get_default_region
-from dnf.FrameDeal import get_skill_max_lighting
-from dnf.YoloPredict import YoloPredict
-import dnf.Action as act
+from tools.image_deal import screenshot
+from tools.image_deal import get_default_region
+from tools.image_detect import get_skill_max_lighting
+from tools.yolo import YoloPredict
+import dnf.keyword_action as act
 
 yolo = YoloPredict("../model/best.pt")
 

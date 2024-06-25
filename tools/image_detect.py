@@ -1,5 +1,5 @@
-from dnf.FrameDeal import screenshot, get_default_region, calculate_brightness
-from dnf.YoloPredict import YoloPredict
+from tools.image_deal import screenshot, get_default_region, calculate_brightness
+from tools.yolo import YoloPredict
 
 # YOLO标签数据
 skill_dict_origin = {

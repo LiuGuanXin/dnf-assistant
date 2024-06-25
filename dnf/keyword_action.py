@@ -1,7 +1,7 @@
-import dnf.Operate as op
+import dnf.keword_operate as op
 from collections import deque
-import dnf.FrameDeal as fd
-from dnf.YoloPredict import YoloPredict
+import tools.image_deal as fd
+from tools.yolo import YoloPredict
 import math
 import numpy as np
 
