@@ -1,10 +1,10 @@
 import sys
 import subprocess
-import threading
-import time
+import io  # 添加导入 io 模块
+
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QLineEdit, QHBoxLayout
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtCore import Qt, pyqtSlot, QTimer
 from PIL import Image
 
 
@@ -67,25 +67,25 @@ class ScreenMirror(QWidget):
 
         self.setLayout(self.layout)
 
-        # 启动线程来更新屏幕
-        self.update_thread = threading.Thread(target=self.update_screen)
-        self.update_thread.daemon = True
-        self.update_thread.start()
+        # 启动定时器来更新屏幕
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_screen)
+        self.timer.start(10)  # 每500毫秒更新一次
 
         # 保存点击坐标
         self.click_coords = None
 
+    @pyqtSlot()
     def update_screen(self):
-        while True:
-            screenshot = self.get_screenshot()
-            if screenshot:
-                self.screen_label.setPixmap(QPixmap.fromImage(screenshot))
-            time.sleep(1)  # 每秒更新一次
+        screenshot = self.get_screenshot()
+        if screenshot:
+            self.screen_label.setPixmap(QPixmap.fromImage(screenshot))
 
     def get_screenshot(self):
         try:
-            subprocess.run(['adb', 'exec-out', 'screencap', '-p'], stdout=open('screen.png', 'wb'))
-            image = Image.open('screen.png')
+            process = subprocess.Popen(['adb', 'exec-out', 'screencap', '-p'], stdout=subprocess.PIPE)
+            output, _ = process.communicate()
+            image = Image.open(io.BytesIO(output))
             image = image.resize((400, 800))  # 调整图片大小以适应界面
             image_qt = QImage(image.tobytes(), image.width, image.height, QImage.Format_RGB888)
             return image_qt
@@ -96,7 +96,6 @@ class ScreenMirror(QWidget):
     def perform_click(self):
         x = self.click_x_input.text()
         y = self.click_y_input.text()
-        duration = self.click_duration_input.text()
         subprocess.run(['adb', 'shell', 'input', 'tap', x, y])
 
     def perform_swipe(self):

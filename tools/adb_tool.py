@@ -38,9 +38,9 @@ def take_screenshot(device_id=None):
     # Example processing: Convert to grayscale
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # Display the image
-    # cv2.imshow('Screenshot', image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.imshow('Screenshot', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     return image
 
 

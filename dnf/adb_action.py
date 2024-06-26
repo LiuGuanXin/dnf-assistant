@@ -307,6 +307,8 @@ def get_next_door_direction(mag_img, path_type):
 
     min_door = get_min_door(open_door_list)
     reversal = reversal_direct(direct)
+
+
 def get_min_door(open_door_list: list) -> []:
     pass
 
