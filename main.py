@@ -10,7 +10,7 @@ yolo = YoloPredict("../model/best.pt")
 def main():
     skill_max_lighting = get_skill_max_lighting(yolo)
     x, y, w, h = get_default_region()
-    act.buff_skill(skill_max_lighting)
+    # act.buff_skill(skill_max_lighting)
     while True:
         frame = screenshot(x, y, w, h)
         self, monster, material, open_door = yolo.get_cord(frame)

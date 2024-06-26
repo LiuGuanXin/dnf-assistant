@@ -9,7 +9,7 @@ import numpy as np
 
 def screenshot(x: int, y: int, width: int, height: int) -> object:
     # 设置录制区域 (x, y, width, height)
-    region = (x, y, width, height)
+    region = (int(x), int(y), int(width), int(height))
     # 捕获屏幕指定区域
     return cv2.cvtColor(np.array(pyautogui.screenshot(region=region)), cv2.COLOR_BGR2RGB)
 

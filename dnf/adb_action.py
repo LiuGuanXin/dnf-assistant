@@ -200,6 +200,7 @@ def get_direction(px, py, x, y):
         else:
             return 'down'
 
+
 def shortest_path_directions(grid, must_pass=None):
     if grid.size == 0:
         return []
@@ -316,8 +317,6 @@ def get_min_door(open_door_list: list) -> []:
 def reversal_direct(direct: str) -> str:
     if direct == "up":
         return "down"
-
-
 
 
 def move_next_room(model: YoloPredict):

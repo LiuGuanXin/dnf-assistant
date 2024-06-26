@@ -196,10 +196,10 @@ def get_direction(px, py, x, y) -> str:
 
 
 def existence_need_door(open_door_cord, direction) -> []:
-    center_cord = fd.get_default_region()
+    _, _, w, h = fd.get_default_region()
     door_dict = dict()
     for door in open_door_cord:
-        direction = get_direction(center_cord[0], center_cord[1], door[0], door[1])
+        direction = get_direction(door[0], door[1], int(w / 2), int(h / 2))
         door_dict[direction] = door
     if direction in door_dict.keys():
         return door_dict[direction]
@@ -343,6 +343,7 @@ def move_next_room(model: YoloPredict):
     if len(self) > 0 and len(open_door) > 0:
         while True:
             print("移动到下一个房间")
+            print("当前是第" + str(current_room_number) + "个房间")
             x, y, w, h = fd.get_default_region()
             self_cord, monster_cord, _, open_door = model.get_cord(fd.screenshot(x, y, w, h))
             close_door_cord = model.get_monster_cord()
@@ -353,7 +354,8 @@ def move_next_room(model: YoloPredict):
                 if current_room_number >= len(num_direct):
                     current_room_number = 1
                 break
-            direct = get_next_door_direction(fd.get_thumbnail_map(), 0)
+            # fd.get_thumbnail_map()
+            direct = get_next_door_direction(None, 0)
             next_door_cord = existence_need_door(open_door, direct)
             print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
             if len(next_door_cord) == 0 and len(self_cord) > 0:
@@ -364,21 +366,21 @@ def move_next_room(model: YoloPredict):
                 # eight_move(self_cord, (x_center, y_center), 1)
                 continue
             if len(self_cord) > 0 and len(next_door_cord) > 0:
-                next_door_cord = open_door[0]
                 x_pais = abs(next_door_cord[0] - self_cord[0])
                 y_pais = abs(next_door_cord[1] - self_cord[1])
                 # 寻找到可以进入的房间后记录与可以进入房间的距离
                 # 如果距离小于一定值 开始检测当前距离最近的门的方向是否发生了改变
                 # 如果发生了改变则跳出循环进入下一个房间
-                if x_pais < 150 and y_pais < 150:
+                if x_pais < 300 and y_pais < 300:
                     x, y, w, h = fd.get_default_region()
                     model.predict_img(fd.screenshot(x, y, w, h))
-                    self_cord = model.get_self_cord()
+                    self_cord_ = model.get_self_cord()
                     open_door_list = model.get_open_door_cord()
-                    if len(open_door_list) > 0 and len(self_cord) > 0:
-                        min_door = get_min_door(self_cord, open_door_list)
+                    if len(open_door_list) > 0 and len(self_cord_) > 0:
+                        min_door = get_min_door(self_cord_, open_door_list)
                         reversal = reversal_direct(direct)
-                        if get_direction(self_cord, min_door) == reversal:
+                        _, _, w, h = fd.get_default_region()
+                        if get_direction(min_door[0], min_door[1], int(w / 2), int(h / 2)) == reversal:
                             print("已经移动到下一个房间了")
                             current_room_number += 1
                             print("当前房间序号：" + str(current_room_number))

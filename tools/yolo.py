@@ -57,7 +57,7 @@ class YoloPredict:
     def get_monster_cord(self):
         monster_cord_list = list()
         for item in self.data:
-            if item[5] == 1 and item[4] > 0.2:
+            if item[5] == 1 and item[4] > 0.7:
                 x, y = (item[0] + item[2]) / 2, item[3]
                 monster_cord_list.append([x, y])
         return monster_cord_list
@@ -89,8 +89,8 @@ class YoloPredict:
     def get_open_door_cord(self):
         open_door_cord_list = list()
         for item in self.data:
-            if item[5] == 4 and item[4] > 0.7:
-                x, y = (item[0] + item[2]) / 2, item[3]
+            if item[5] == 4 and item[4] > 0.4:
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
                 open_door_cord_list.append([x, y])
         return open_door_cord_list
 
