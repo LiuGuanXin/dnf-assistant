@@ -14,9 +14,10 @@ def main():
     while True:
         frame = screenshot(x, y, w, h)
         self, monster, material, open_door = yolo.get_cord(frame)
-        if len(monster) == 0 and len(material) > 0:
-            # 捡材料
-            act.pick_material(yolo)
+        for i in range(5):
+            if len(monster) == 0 and len(material) > 0:
+                # 捡材料
+                act.pick_material(yolo)
         # 判断是否有开着的门
         if len(open_door) > 0 and len(monster) == 0 and len(material) == 0:
             print("移动到下一个房间")

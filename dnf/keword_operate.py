@@ -87,6 +87,10 @@ def skill(key, cast_type, direction=None):
         click_and_drag(x, y, x_offset, y_offset, 0.5)
 
 
+def dodge():
+    press_key('C', 0.2)
+
+
 def normal_attack(times):
     for _ in range(times):
         press_key('X', 0.3)

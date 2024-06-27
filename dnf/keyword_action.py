@@ -31,7 +31,7 @@ def four_move(self_cord, dest_cord):
     op.move(direction)
 
 
-def eight_move(self_cord, dest_cord, input_time=0):
+def eight_move(self_cord, dest_cord, input_time: float = 0):
     # 计算x轴差异
     x_direction = dest_cord[0] - self_cord[0]
     # 计算y轴差异
@@ -146,7 +146,17 @@ def buff_skill(skill_max_lighting):
                 op.press_key(skill, 0.2)
 
 
-flag = 0
+def get_min_monster(self_cord, monster_list):
+    min_monster = monster_list[0]
+    min_distance = math.sqrt((abs(self_cord[0]) - abs(min_monster[0])) ** 2
+                             + (abs(self_cord[1]) - abs(min_monster[1])) ** 2)
+    for monster in monster_list:
+        dis = math.sqrt((abs(self_cord[0]) - abs(monster[0])) ** 2
+                        + (abs(self_cord[1]) - abs(monster[1])) ** 2)
+        if dis < min_distance:
+            min_distance = dis
+            min_monster = monster
+    return min_monster
 
 
 # 攻击
@@ -157,50 +167,52 @@ def attack(model: YoloPredict, skill_max_lighting):
     monster_cord = model.get_monster_cord()
     if len(self_cord) > 0 and len(monster_cord) > 0:
         # 获取怪物中心的坐标 和 最左侧怪物的坐标
-        left_x_min, left_y_min = model.get_left_monster()
+        x_min, y_min = get_min_monster(self_cord, monster_cord)
         x_mean = sum(monster_cord[:][0]) / len(monster_cord)
         # 判断是否怪物在攻击范围内
-        if (abs(self_cord[0] - left_x_min) < 200
-                and abs(self_cord[1] - left_y_min) < 200):
+        if (abs(self_cord[0] - x_min) < 300
+                and abs(self_cord[1] - y_min) < 150):
             # 调整
             # 攻击怪物
-            # 如何攻击？ 普攻 + 技能的方式
-            op.normal_attack(3)
             # 根据怪物数量选择技能
             # 调整面对方向 面朝怪物的方向
-            if self_cord[0] >= x_mean:
+            if self_cord[0] <= x_min:
                 op.press_key("right", 0.05)
             else:
                 op.press_key("left", 0.05)
             # 获取可使用技能
             current_skill_list = get_cd_skill(1, skill_max_lighting)
+            op.dodge()
             # 释放技能
             if len(current_skill_list) > 0:
                 random_skill = np.random.choice(current_skill_list)
                 op.skill(random_skill, "click")
+            # 如何攻击？ 普攻 + 技能的方式
+            op.normal_attack(3)
 
 
-def get_direction(px, py, x, y) -> str:
-    dx = x - px
-    dy = y - py
-    if abs(dx) > abs(dy):
-        if dx > 0:
-            return 'right'
-        else:
-            return 'left'
+def get_direction(x, y) -> str:
+    _, _, w, h = fd.get_default_region()
+    # 计算点到对角线1的y值
+    y1 = (h / w) * x
+    # 计算点到对角线2的y值
+    y2 = (-h / w) * x + h
+
+    if y < y1 and y < y2:
+        return "up"
+    elif y > y1 and y > y2:
+        return "down"
+    elif y1 < y < y2:
+        return "left"
     else:
-        if dy > 0:
-            return 'up'
-        else:
-            return 'down'
+        return "right"
 
 
 def existence_need_door(open_door_cord, direction) -> []:
-    _, _, w, h = fd.get_default_region()
     door_dict = dict()
     for door in open_door_cord:
-        direction = get_direction(door[0], door[1], int(w / 2), int(h / 2))
-        door_dict[direction] = door
+        direct = get_direction(door[0], door[1])
+        door_dict[direct] = door
     if direction in door_dict.keys():
         return door_dict[direction]
     else:
@@ -315,9 +327,9 @@ def get_next_door_direction(mag_img, path_type):
 
 def get_min_door(self_cord, open_door_list: list) -> []:
     min_door = open_door_list[0]
-    min_distance = math.sqrt((self_cord[0] - min_door[0]) ** 2 + (self_cord[1] - min_door[1]) ** 2)
+    min_distance = math.sqrt((abs(self_cord[0]) - abs(min_door[0])) ** 2 + (abs(self_cord[1]) - abs(min_door[1])) ** 2)
     for door in open_door_list:
-        dis = math.sqrt((self_cord[0] - min_door[0]) ** 2 + (door[1] - door[1]) ** 2)
+        dis = math.sqrt((abs(self_cord[0]) - abs(min_door[0])) ** 2 + (abs(door[1]) - abs(door[1])) ** 2)
         if dis < min_distance:
             min_distance = dis
             min_door = door
@@ -335,6 +347,15 @@ def reversal_direct(direct: str) -> str:
         return "left"
 
 
+def is_black():
+    frame = fd.screenshot(1800, 1000, 200, 200)
+    total = np.mean(np.array(frame))
+    if total < 20:
+        return True
+    else:
+        return False
+
+
 def move_next_room(model: YoloPredict):
     global current_room_number
     x, y, w, h = fd.get_default_region()
@@ -347,46 +368,33 @@ def move_next_room(model: YoloPredict):
             x, y, w, h = fd.get_default_region()
             self_cord, monster_cord, _, open_door = model.get_cord(fd.screenshot(x, y, w, h))
             close_door_cord = model.get_monster_cord()
-            if len(close_door_cord) > 0 or len(monster_cord) > 0:
+            if len(close_door_cord) > 0 or len(monster_cord) > 0 or is_black():
                 print("已经移动到下一个房间了")
                 current_room_number += 1
                 print("当前房间序号：" + str(current_room_number))
                 if current_room_number >= len(num_direct):
                     current_room_number = 1
+                x, y, w, h = fd.get_default_region()
+                self_cord, monster_cord, _, open_door = model.get_cord(fd.screenshot(x, y, w, h))
+                if len(self_cord) > 0:
+                    x_center, y_center = x + w / 2, y + h / 2
+                    eight_move(self_cord, (x_center, y_center))
                 break
             # fd.get_thumbnail_map()
             direct = get_next_door_direction(None, 0)
+            print("下一个房间门的方向：" + direct)
             next_door_cord = existence_need_door(open_door, direct)
             print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
             if len(next_door_cord) == 0 and len(self_cord) > 0:
                 # 移动寻找门
                 print("不存在可以进入的房间，移动寻找")
-                # x, y, w, h = fd.get_default_region()
-                # x_center, y_center = x + w / 2, y + h / 2
-                # eight_move(self_cord, (x_center, y_center), 1)
+                x, y, w, h = fd.get_default_region()
+                x_center, y_center = x + w / 2, y + h / 2
+                eight_move(self_cord, (x_center, y_center), 0.1)
                 continue
             if len(self_cord) > 0 and len(next_door_cord) > 0:
                 x_pais = abs(next_door_cord[0] - self_cord[0])
                 y_pais = abs(next_door_cord[1] - self_cord[1])
-                # 寻找到可以进入的房间后记录与可以进入房间的距离
-                # 如果距离小于一定值 开始检测当前距离最近的门的方向是否发生了改变
-                # 如果发生了改变则跳出循环进入下一个房间
-                if x_pais < 300 and y_pais < 300:
-                    x, y, w, h = fd.get_default_region()
-                    model.predict_img(fd.screenshot(x, y, w, h))
-                    self_cord_ = model.get_self_cord()
-                    open_door_list = model.get_open_door_cord()
-                    if len(open_door_list) > 0 and len(self_cord_) > 0:
-                        min_door = get_min_door(self_cord_, open_door_list)
-                        reversal = reversal_direct(direct)
-                        _, _, w, h = fd.get_default_region()
-                        if get_direction(min_door[0], min_door[1], int(w / 2), int(h / 2)) == reversal:
-                            print("已经移动到下一个房间了")
-                            current_room_number += 1
-                            print("当前房间序号：" + str(current_room_number))
-                            if current_room_number >= len(num_direct):
-                                current_room_number = 1
-                            break
 
                 if x_pais < 50 and y_pais < 50:
                     # 已经在附近但是进不去门，需要重新进一下试试
