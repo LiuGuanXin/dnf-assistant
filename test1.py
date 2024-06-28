@@ -1,15 +1,19 @@
 import cv2
 import subprocess
+import threading
+import time
+
+scrcpy_path = "G:/scrcpy-win64-v2.4/scrcpy.exe"
 
 
 def start_scrcpy():
     subprocess.Popen([
-        "scrcpy", "--no-display", "--tcpip=localhost", "--port=8080", "--output-format=h264"
+        "scrcpy", "--no-playback", "--record=tmp.mp4"
     ])
 
 
 def capture_video_stream():
-    cap = cv2.VideoCapture("tcp://localhost:8080")
+    cap = cv2.VideoCapture("tmp.mp4")
     if not cap.isOpened():
         print("Error: Could not open video stream.")
         return
@@ -29,7 +33,12 @@ def capture_video_stream():
 
 
 def main():
-    start_scrcpy()
+    scrcpy_thread = threading.Thread(target=start_scrcpy)
+    scrcpy_thread.start()
+
+    # 给 scrcpy 一些时间来启动和开始录制
+    time.sleep(5)
+
     capture_video_stream()
 
 
