@@ -1,33 +1,37 @@
-import subprocess
 import cv2
-import numpy as np
-
-scrcpy_path = "F:/scrcpy/scrcpy.exe"
+import subprocess
 
 
-def capture_screen():
-    # 使用 scrcpy 捕获屏幕
-    process = subprocess.Popen([scrcpy_path, '-b16M', '--max-size', '800', '--tcpip=192.168.0.100'],
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    return process.stdout
+def start_scrcpy():
+    subprocess.Popen([
+        "scrcpy", "--no-display", "--tcpip=localhost", "--port=8080", "--output-format=h264"
+    ])
 
 
-def show_image(stream):
+def capture_video_stream():
+    cap = cv2.VideoCapture("tcp://localhost:8080")
+    if not cap.isOpened():
+        print("Error: Could not open video stream.")
+        return
+
     while True:
-        # 读取流中的图像数据
-        data = stream.read(921600)
-        if not data:
+        ret, frame = cap.read()
+        if not ret:
             break
-        # 转换为 numpy 数组
-        frame = np.frombuffer(data, dtype=np.uint8).reshape((720, 1280, 3))
-        # 显示图像
-        cv2.imshow('Screen', frame)
+
+        cv2.imshow('Android Screen', frame)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+    cap.release()
     cv2.destroyAllWindows()
 
 
+def main():
+    start_scrcpy()
+    capture_video_stream()
+
+
 if __name__ == "__main__":
-    stream = capture_screen()
-    show_image(stream)
+    main()
