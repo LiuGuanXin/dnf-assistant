@@ -1,8 +1,10 @@
 import time
-from dnf.keword_operate import press_key
+from dnf.keyword_operate import press_key
 import cv2
 import pyautogui
 import numpy as np
+import adb_tool as at
+from collections import deque
 
 """ 截取指定区域的屏幕 """
 
@@ -16,6 +18,23 @@ def screenshot(x: int, y: int, width: int, height: int) -> object:
 
 def get_default_region():
     return 1410, 875, 1153, 500
+
+
+def get_default_img(operate_type: int = 0):
+    if operate_type == 0:
+        x, y, w, h = get_default_region()
+        return screenshot(x, y, w, h)
+    else:
+        return at.take_screenshot()
+
+
+def get_center_cord(operate_type: int = 0):
+    if operate_type == 0:
+        x, y, w, h = get_default_region()
+        return x + w / 2, y + h / 2
+    else:
+        w, h, _ = at.take_screenshot().shape
+        return w / 2, h / 2
 
 
 def get_map_region():
@@ -126,3 +145,47 @@ def split_image_and_calculate_brightness(img, num_splits_x, num_splits_y):
                     room_class_array[i, j] = 1
         return room_class_array
 
+
+def shortest_path_directions(grid, must_pass=None):
+    if grid.size == 0:
+        return []
+
+    rows, cols = grid.shape
+    directions = [(-1, 0, 'up'), (1, 0, 'down'), (0, -1, 'left'), (0, 1, 'right')]  # 上下左右四个方向
+
+    # 找到起点和终点的位置
+    start = tuple(np.argwhere(grid == 2)[0])
+    end = tuple(np.argwhere(grid == 3)[0])
+
+    if not start or not end:
+        return []
+
+    queue = deque([(start[0], start[1], [])])  # 队列中存储 (row, col, path)
+    visited = set()
+    visited.add(start)
+
+    # 如果有必经点，将其添加到访问集合中
+    if must_pass:
+        for point in must_pass:
+            visited.add(tuple(point))
+
+    while queue:
+        r, c, path = queue.popleft()
+
+        # 如果到达终点，返回当前路径
+        if (r, c) == end:
+            return path
+
+        # 否则，继续向四个方向扩展
+        for dr, dc, dir_name in directions:
+            nr, nc = r + dr, c + dc
+
+            # 检查边界和是否访问过
+            if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
+                if grid[nr, nc] != 0 and grid[nr, nc] != 4:
+                    visited.add((nr, nc))
+                    new_path = path + [dir_name]
+                    queue.append((nr, nc, new_path))
+
+    # 如果无法到达终点，返回空列表
+    return []
