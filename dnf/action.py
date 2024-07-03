@@ -1,4 +1,4 @@
-import dnf.keyword_operate as op
+import dnf.operate as op
 import tools.image_deal as fd
 from tools.yolo import YoloPredict
 import math
@@ -31,7 +31,7 @@ class action:
                         current_room_number = 1
                     self_cord, monster_cord, _, open_door = model.get_cord(fd.get_default_img())
                     if len(self_cord) > 0:
-                        op.eight_move(self_cord, fd.get_center_cord())
+                        op.move_to_dest(self_cord, fd.get_center_cord())
                     break
                 # fd.get_thumbnail_map()
                 direct = get_next_door_direction(None, 0)
@@ -41,7 +41,7 @@ class action:
                 if len(next_door_cord) == 0 and len(self_cord) > 0:
                     # 移动寻找门
                     print("不存在可以进入的房间，移动寻找")
-                    op.eight_move(self_cord, fd.get_center_cord(), 0.1)
+                    op.move_to_dest(self_cord, fd.get_center_cord(), 0.1)
                     continue
                 if len(self_cord) > 0 and len(next_door_cord) > 0:
                     x_pais = abs(next_door_cord[0] - self_cord[0])
@@ -50,9 +50,9 @@ class action:
                     if x_pais < 50 and y_pais < 50:
                         # 已经在附近但是进不去门，需要重新进一下试试
                         pass
-                    op.eight_move(self_cord, next_door_cord)
+                    op.move_to_dest(self_cord, next_door_cord)
 
-    def gather_monster_move(self, direction_type=1):
+    def gather_monster_move(self):
         model = self.model
         while True:
             print("走位拉怪")
@@ -64,12 +64,7 @@ class action:
             if len(self_cord) > 0 and len(dest_cord) > 0:
                 if break_condition(self_cord, dest_cord):
                     break
-                # 四方向操作
-                if direction_type == 0:
-                    op.four_move(self_cord, dest_cord)
-                # 八方向操作
-                elif direction_type == 1:
-                    op.eight_move(self_cord, dest_cord)
+                op.move_to_dest(self_cord, dest_cord)
 
     # 捡材料
     def pick_material(self):
@@ -92,7 +87,7 @@ class action:
                 times = 0
             print("捡材料")
             if len(self_cord) > 0 and len(material_cord) > 0:
-                op.eight_move(self_cord, material_cord[0])
+                op.move_to_dest(self_cord, material_cord[0])
 
     # 攻击
     def attack(self, skill_max_lighting):

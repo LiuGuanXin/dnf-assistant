@@ -91,7 +91,7 @@ def swipe_screen(start_x, start_y, end_x, end_y, duration=300, device_id=None):
     execute_adb_command(swipe_command)
 
 
-def move(direction, start_x=500, start_y=1000, distance=300, duration=300, device_id=None):
+def move(direction, start_x=500, start_y=1000, distance=100, duration=100, device_id=None):
     """
     Move in one of the eight directions from the (start_x, start_y) coordinates.
     """
@@ -100,10 +100,10 @@ def move(direction, start_x=500, start_y=1000, distance=300, duration=300, devic
         "down": (0, distance),
         "left": (-distance, 0),
         "right": (distance, 0),
-        "left_up": (-distance, -distance),
-        "right_up": (distance, -distance),
-        "left_down": (-distance, distance),
-        "right_down": (distance, distance),
+        "topLeft": (-distance, -distance),
+        "topRight": (distance, -distance),
+        "downLeft": (-distance, distance),
+        "downRight": (distance, distance)
     }
 
     if direction in direction_dict:
