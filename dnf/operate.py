@@ -14,7 +14,7 @@ skill_cord = {
 }
 
 buff_skill_cord = {
-
+    'w': [1, 1, 1]
 }
 
 x_skill_cord = []
@@ -132,10 +132,10 @@ def buff_skill(skill_max_lighting, operate_type: int = 0):
                 elif "E" == sk:
                     press_key(sk, 0.2)
     else:
-        for item in buff_skill_cord:
-            x_cord, y_cord, t_cord = buff_skill_cord[item]
-        at.tap_screen_time(x_cord, y_cord, t_cord)
-        time.sleep(0.3)
+        for key, val in enumerate(buff_skill_cord):
+            x_cord, y_cord, t_cord = val
+            at.tap_screen_time(x_cord, y_cord, t_cord)
+            time.sleep(0.3)
 
 
 def dodge(operate_type: int = 0):

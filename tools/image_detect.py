@@ -1,4 +1,4 @@
-from tools.image_deal import screenshot, get_default_region, calculate_brightness
+from tools.image_deal import screenshot, get_default_region, calculate_brightness, get_default_img
 from tools.yolo import YoloPredict
 
 # YOLO标签数据
@@ -61,11 +61,9 @@ def skill_change_coordinates() -> dict:
 
 def get_skill_max_lighting(model: YoloPredict):
     while True:
-        x, y, w, h = get_default_region()
-        img = screenshot(x, y, w, h)
-        self, _, _, _ = model.get_cord(img)
+        self, _, _, _ = model.get_cord()
         if len(self) != 0:
-            _, total_lighting = detect_skill_lighting(img)
+            _, total_lighting = detect_skill_lighting(get_default_img())
             break
     return total_lighting
 

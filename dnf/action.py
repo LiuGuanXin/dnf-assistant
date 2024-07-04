@@ -10,18 +10,19 @@ devi = 300
 
 
 class action:
-    def __init__(self, model: YoloPredict):
+    def __init__(self, model: YoloPredict, skill_max_lighting):
+        self.skill_max_lighting = skill_max_lighting
         self.model = model
 
     def move_next_room(self):
         model = self.model
         global current_room_number
-        self_c, _, _, open_door = model.get_cord(fd.get_default_img())
+        self_c, _, _, open_door = model.get_cord()
         if len(self_c) > 0 and len(open_door) > 0:
             while True:
                 print("移动到下一个房间")
                 print("当前是第" + str(current_room_number) + "个房间")
-                self_cord, monster_cord, _, open_door = model.get_cord(fd.get_default_img())
+                self_cord, monster_cord, _, open_door = model.get_cord()
                 close_door_cord = model.get_monster_cord()
                 if len(close_door_cord) > 0 or len(monster_cord) > 0 or is_black():
                     print("已经移动到下一个房间了")
@@ -29,7 +30,7 @@ class action:
                     print("当前房间序号：" + str(current_room_number))
                     if current_room_number >= len(num_direct):
                         current_room_number = 1
-                    self_cord, monster_cord, _, open_door = model.get_cord(fd.get_default_img())
+                    self_cord, monster_cord, _, open_door = model.get_cord()
                     if len(self_cord) > 0:
                         op.move_to_dest(self_cord, fd.get_center_cord())
                     break
@@ -89,35 +90,49 @@ class action:
             if len(self_cord) > 0 and len(material_cord) > 0:
                 op.move_to_dest(self_cord, material_cord[0])
 
+    def use_random_skill(self):
+        # 获取可使用技能
+        current_skill_list = get_cd_skill(1, self.skill_max_lighting)
+        op.dodge()
+        # 释放技能
+        if len(current_skill_list) > 0:
+            random_skill = np.random.choice(current_skill_list)
+            op.skill(random_skill, "click")
+
     # 攻击
-    def attack(self, skill_max_lighting):
+    def attack(self):
         model = self.model
         model.predict_img(fd.get_default_img())
         self_cord = model.get_self_cord()
         monster_cord = model.get_monster_cord()
         if len(self_cord) > 0 and len(monster_cord) > 0:
-            # 获取怪物中心的坐标 和 最左侧怪物的坐标
-            x_min, y_min = get_min_monster(self_cord, monster_cord)
-            # 判断是否怪物在攻击范围内
-            if (abs(self_cord[0] - x_min) < 300
-                    and abs(self_cord[1] - y_min) < 150):
-                # 调整
-                # 攻击怪物
-                # 根据怪物数量选择技能
-                # 调整面对方向 面朝怪物的方向
-                if self_cord[0] <= x_min:
-                    op.press_key("right", 0.05)
+            num_threshold = 4
+            # 判断左侧和右侧的怪物数量
+            left_num, right_num = 0, 0
+            for monster in monster_cord:
+                if monster[0] < self_cord[0]:
+                    left_num += 1
                 else:
-                    op.press_key("left", 0.05)
-                # 获取可使用技能
-                current_skill_list = get_cd_skill(1, skill_max_lighting)
-                op.dodge()
-                # 释放技能
-                if len(current_skill_list) > 0:
-                    random_skill = np.random.choice(current_skill_list)
-                    op.skill(random_skill, "click")
-                # 如何攻击？ 普攻 + 技能的方式
-                op.normal_attack(3)
+                    right_num += 1
+            # 如果数量多于一定的值
+            if left_num > num_threshold:
+                op.move("right", 0.05)
+                self.use_random_skill()
+            elif right_num > num_threshold:
+                op.move("left", 0.05)
+                self.use_random_skill()
+            else:
+                # 如果数量少于一定的值 获取离自己最近的怪物坐标
+                x_min, y_min = get_min_monster(self_cord, monster_cord)
+                # 判断是否怪物在普攻范围内
+                if (abs(self_cord[0] - x_min) < 300
+                        and abs(self_cord[1] - y_min) < 150):
+                    if self_cord[0] <= x_min:
+                        op.move("right", 0.05)
+                    else:
+                        op.move("left", 0.05)
+                    # 如何攻击？ 普攻 + 技能的方式
+                    op.normal_attack(3)
 
 
 def break_condition(self_cord, dest_cord):
@@ -129,6 +144,7 @@ def break_condition(self_cord, dest_cord):
         return False
 
 
+# 获取离自己最近的对象坐标
 def get_min_monster(self_cord, monster_list):
     min_monster = monster_list[0]
     min_distance = math.sqrt((abs(self_cord[0]) - abs(min_monster[0])) ** 2

@@ -1,20 +1,19 @@
-from tools.image_deal import screenshot
+from tools.image_deal import get_default_img
 from tools.image_deal import get_default_region
 from tools.image_detect import get_skill_max_lighting
 from tools.yolo import YoloPredict
 from dnf.action import action
 
 yolo = YoloPredict("../model/best.pt")
-act = action(yolo)
+skill_max_lighting = get_skill_max_lighting(yolo)
+act = action(yolo, skill_max_lighting)
 
 
 def main():
-    skill_max_lighting = get_skill_max_lighting(yolo)
     x, y, w, h = get_default_region()
     # buff_skill(skill_max_lighting)
     while True:
-        frame = screenshot(x, y, w, h)
-        self, monster, material, open_door = yolo.get_cord(frame)
+        self, monster, material, open_door = yolo.get_cord()
         for _ in range(5):
             if len(monster) == 0 and len(material) > 0:
                 # 捡材料
@@ -25,11 +24,10 @@ def main():
             act.move_next_room()
         if len(self) != 0 and len(monster) != 0:
             act.gather_monster_move()
-            frame = screenshot(x, y, w, h)
-            self, monster, material, open_door = yolo.get_cord(frame)
+            self, monster, material, open_door = yolo.get_cord()
             print("开始攻击")
             if len(monster) != 0 and len(self) != 0:
-                act.attack(skill_max_lighting)
+                act.attack()
 
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
 from ultralytics import YOLO
+from tools.image_deal import get_default_img
 import torch
 import cv2
 
@@ -34,9 +35,9 @@ class YoloPredict:
         # 左上角  右下角坐标  置信度 类别
         self.drawing()
 
-    def get_cord(self, frame):
+    def get_cord(self):
         # 类别里可以加一个小地图的分类以获取小地图的位置
-        self.predict_img(frame)
+        self.predict_img(get_default_img())
         self_cord = self.get_self_cord()
         monster_cord = self.get_monster_cord()
         material_cord = self.get_material_cord()
