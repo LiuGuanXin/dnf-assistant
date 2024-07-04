@@ -1,4 +1,3 @@
-from tools.image_deal import get_default_img
 from tools.image_deal import get_default_region
 from tools.image_detect import get_skill_max_lighting
 from tools.yolo import YoloPredict
@@ -10,7 +9,6 @@ act = action(yolo, skill_max_lighting)
 
 
 def main():
-    x, y, w, h = get_default_region()
     # buff_skill(skill_max_lighting)
     while True:
         self, monster, material, open_door = yolo.get_cord()

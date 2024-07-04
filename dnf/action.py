@@ -1,3 +1,5 @@
+import time
+
 import dnf.operate as op
 import tools.image_deal as fd
 from tools.yolo import YoloPredict
@@ -31,8 +33,11 @@ class action:
                     if current_room_number >= len(num_direct):
                         current_room_number = 1
                     self_cord, monster_cord, _, open_door = model.get_cord()
+                    for _ in range(10):
+                        if is_black():
+                            time.sleep(0.3)
                     if len(self_cord) > 0:
-                        op.move_to_dest(self_cord, fd.get_center_cord())
+                        op.move_to_dest(self_cord, fd.get_center_cord(), 0.2)
                     break
                 # fd.get_thumbnail_map()
                 direct = get_next_door_direction(None, 0)
