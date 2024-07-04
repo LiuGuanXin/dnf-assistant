@@ -82,10 +82,13 @@ class action:
             material_cord = model.get_material_cord()
             monster_cord = model.get_monster_cord()
             close_door_cord = model.get_close_door_cord()
-            # 连续五次没检测到则退出
+            # 连续3次没检测到则退出
             if (len(material_cord) == 0 or len(monster_cord) > 0
                     or len(close_door_cord) == 0):
                 if times > 3:
+                    # 检测不到材料 判断是否进入了结束界面  如何判断？
+                    # 点击下一局  弹窗则点击不再提醒 确定
+                    # 检测是否进入到了新房间，重置房间编号
                     break
                 else:
                     times += 1
