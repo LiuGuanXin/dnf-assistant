@@ -3,7 +3,7 @@ from tools.keword_tool import press_key
 import cv2
 import pyautogui
 import numpy as np
-import adb_tool as at
+import tools.adb_tool as at
 from collections import deque
 
 """ 截取指定区域的屏幕 """

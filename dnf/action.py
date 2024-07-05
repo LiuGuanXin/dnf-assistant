@@ -124,10 +124,10 @@ class action:
                     right_num += 1
             # 如果数量多于一定的值
             if left_num > num_threshold:
-                op.move("right", 0.05)
+                op.move("left", 0.05)
                 self.use_random_skill()
             elif right_num > num_threshold:
-                op.move("left", 0.05)
+                op.move("right", 0.05)
                 self.use_random_skill()
             else:
                 # 如果数量少于一定的值 获取离自己最近的怪物坐标
