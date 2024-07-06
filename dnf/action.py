@@ -167,6 +167,7 @@ def get_min_monster(self_cord, monster_list):
 
 
 def get_direction(x, y) -> str:
+    # 根据对角线来划分上下左右
     _, _, w, h = fd.get_default_region()
     # 计算点到对角线1的y值
     y1 = (h / w) * x
@@ -181,17 +182,32 @@ def get_direction(x, y) -> str:
         return "left"
     else:
         return "right"
+    # 根基中心点十字划分上下左右
 
 
 def existence_need_door(open_door_cord, direction) -> []:
     door_dict = dict()
-    for door in open_door_cord:
-        direct = get_direction(door[0], door[1])
-        door_dict[direct] = door
-    if direction in door_dict.keys():
-        return door_dict[direction]
-    else:
-        return []
+    need_door = []
+    # 只检测到了一个门
+    if len(open_door_cord) == 1:
+        if direction == get_direction(open_door_cord[0][0], open_door_cord[0][1]):
+            need_door = open_door_cord[0]
+    # 检测到两个门
+    elif len(open_door_cord) == 2:
+        pass
+    # 检测到三个门
+    elif len(open_door_cord) == 3:
+        pass
+    # 检测到四个门
+    elif len(open_door_cord) == 4:
+        pass
+    return need_door
+
+    # for door in open_door_cord:
+    #     direct = get_direction(door[0], door[1])
+    #     door_dict[direct] = door
+    # if direction in door_dict.keys():
+    #     return door_dict[direction]
 
 
 room_class_array = []
