@@ -6,18 +6,9 @@ from tools.keword_tool import press_key
 from tools.keword_tool import press_keys
 import tools.adb_tool as at
 from tools.image_detect import get_cd_skill
-
-move_wheel_cord = []
-
-skill_cord = {
-
-}
-
-buff_skill_cord = {
-    'w': [1, 1, 1]
-}
-
-x_skill_cord = []
+from tools.image_detect import (get_move_wheel_cord, get_c_skill_cord,
+                                get_x_skill_cord, get_skill_cord, get_buff_skill_cord)
+from tools.image_deal import operate_type
 
 
 def move_to_dest(self_cord, dest_cord, input_time: float = 0):
@@ -47,7 +38,7 @@ def move_to_dest(self_cord, dest_cord, input_time: float = 0):
             print("向右上移动")
         elif 60 < angle <= 90:
             move("up", input_time)
-            print("向右上移动")
+            print("向上移动")
     elif x_direction < 0 < y_direction:
         if 0 <= angle < 30:
             move("left", input_time)
@@ -70,15 +61,15 @@ def move_to_dest(self_cord, dest_cord, input_time: float = 0):
             print("向上移动")
 
 
-def move(direction, input_time: float = 0, operate_type: int = 0):
+def move(direction, input_time: float = 0):
     # 根据距离计算按压时间
     press_time = 0.1
     if input_time != 0:
         press_time = input_time
         # adb操作
     if operate_type == 1:
-        x, y = move_wheel_cord
-        at.move(direction, x, y, press_time)
+        x, y = get_move_wheel_cord()
+        at.move(direction, x, y)
     else:
         direction_dict = {
             'topLeft': ['up', 'left'],
@@ -93,7 +84,7 @@ def move(direction, input_time: float = 0, operate_type: int = 0):
             press_keys(direction_dict[direction], press_time)
 
 
-def skill(key, cast_type, direction=None, operate_type: int = 0):
+def skill(key, cast_type, direction=None):
     if operate_type == 0:
         if cast_type == 'click':
             # 直接点击类型
@@ -113,15 +104,16 @@ def skill(key, cast_type, direction=None, operate_type: int = 0):
                 x_offset, y_offset = 0, 0
             click_and_drag(x, y, x_offset, y_offset, 0.5)
     else:
+        skill_dict = get_skill_cord()
         if cast_type == 'click':
-            x, y = skill_cord[key]
-            at.tap_screen_time(x, y, 1)
+            x, y = skill_dict[key]
+            at.tap_screen_time(x, y)
         elif cast_type == 'slide_release':
-            x, y, x_offset, y_offset = skill_cord[key]
-            at.swipe_screen(x, y, x + x_offset, y + y_offset, 0.3)
+            x, y, x_offset, y_offset = skill_dict[key]
+            at.swipe_screen(x, y, x + x_offset, y + y_offset)
 
 
-def buff_skill(skill_max_lighting, operate_type: int = 0):
+def buff_skill(skill_max_lighting):
     if operate_type == 0:
         # 获取可使用技能
         current_skill_list = get_cd_skill(1, skill_max_lighting)
@@ -132,28 +124,29 @@ def buff_skill(skill_max_lighting, operate_type: int = 0):
                 elif "E" == sk:
                     press_key(sk, 0.2)
     else:
-        for key, val in enumerate(buff_skill_cord):
+        for key, val in enumerate(get_buff_skill_cord()):
             x_cord, y_cord, t_cord = val
             at.tap_screen_time(x_cord, y_cord, t_cord)
             time.sleep(0.3)
 
 
-def dodge(operate_type: int = 0):
+def dodge():
     if operate_type == 0:
         press_key('C', 0.2)
     else:
-        x, y = [1, 1]
+        x, y = get_c_skill_cord()
         at.tap_screen_time(x, y, 100)
 
 
-def normal_attack(times, operate_type: int = 0):
+def normal_attack(times):
     for _ in range(times):
         if operate_type == 0:
             press_key('X', 0.3)
         else:
-            x, y = x_skill_cord
-            at.tap_screen_time(x, y, 100)
+            x, y = get_x_skill_cord()
+            at.tap_screen_time(x, y, 300)
             time.sleep(0.1)
+    time.sleep(1)
 
 
 def again():

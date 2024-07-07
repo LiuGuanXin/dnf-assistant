@@ -3,38 +3,48 @@ from tools.keword_tool import press_key
 import cv2
 import pyautogui
 import numpy as np
-import tools.adb_tool as at
+from tools.screenshot import get_screenshot
 from collections import deque
+from tools.screenshot import get_resolution
+
+# 通过虫洞投屏软件操作 还是直接操作
+operate_type = 1
 
 """ 截取指定区域的屏幕 """
 
 
 def screenshot(x: int, y: int, width: int, height: int) -> object:
-    # 设置录制区域 (x, y, width, height)
-    region = (int(x), int(y), int(width), int(height))
-    # 捕获屏幕指定区域
-    return cv2.cvtColor(np.array(pyautogui.screenshot(region=region)), cv2.COLOR_BGR2RGB)
+    if operate_type == 0:
+        # 设置录制区域 (x, y, width, height)
+        region = (int(x), int(y), int(width), int(height))
+        # 捕获屏幕指定区域
+        return cv2.cvtColor(np.array(pyautogui.screenshot(region=region)), cv2.COLOR_BGR2RGB)
+    else:
+        return get_screenshot()
 
 
 def get_default_region():
-    return 1410, 875, 1153, 500
+    if operate_type == 0:
+        return 1410, 875, 1153, 500
+    else:
+        w, h = get_resolution()
+        if w > h:
+            return 0, 0, w, h
+        else:
+            return 0, 0, h, w
 
 
-def get_default_img(operate_type: int = 0):
+def get_default_img():
     if operate_type == 0:
         x, y, w, h = get_default_region()
         return screenshot(x, y, w, h)
     else:
-        return at.take_screenshot()
+        return get_screenshot()
 
 
-def get_center_cord(operate_type: int = 0):
-    if operate_type == 0:
-        x, y, w, h = get_default_region()
-        return x + w / 2, y + h / 2
-    else:
-        w, h, _ = at.take_screenshot().shape
-        return w / 2, h / 2
+def get_center_cord():
+    x, y, w, h = get_default_region()
+    return x + w / 2, y + h / 2
 
 
 def get_map_region():

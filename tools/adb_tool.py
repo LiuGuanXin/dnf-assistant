@@ -1,7 +1,5 @@
 import subprocess
 import time
-import numpy as np
-import cv2
 
 
 def execute_adb_command(command):
@@ -13,35 +11,6 @@ def execute_adb_command(command):
         print(f"Error executing command: {command}")
         print(result.stderr)
     return result.stdout
-
-
-def take_screenshot(device_id=None):
-    """
-     Take a screenshot from an Android device and process it using OpenCV.
-     """
-    adb_command = "adb"
-    if device_id:
-        adb_command += f" -s {device_id}"
-    screencap_command = f"{adb_command} shell screencap -p"
-    # Execute the command and get the raw image data
-    print("Taking screenshot...")
-    raw_image = execute_adb_command(screencap_command)
-    # Convert the raw image data to a numpy array
-    image_array = np.frombuffer(raw_image, dtype=np.uint8)
-    # Decode the image array to an OpenCV image
-    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-    if image is None:
-        print("Failed to decode image")
-        return
-    # Process the image using OpenCV
-    print("Processing the screenshot with OpenCV...")
-    # Example processing: Convert to grayscale
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # Display the image
-    cv2.imshow('Screenshot', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    return image
 
 
 def tap_screen(x, y, device_id=None):
@@ -91,7 +60,7 @@ def swipe_screen(start_x, start_y, end_x, end_y, duration=300, device_id=None):
     execute_adb_command(swipe_command)
 
 
-def move(direction, start_x=500, start_y=1000, distance=100, duration=100, device_id=None):
+def move(direction, start_x=500, start_y=1000, distance=200, duration=200, device_id=None):
     """
     Move in one of the eight directions from the (start_x, start_y) coordinates.
     """

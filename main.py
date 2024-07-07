@@ -1,4 +1,3 @@
-from tools.image_deal import get_default_region
 from tools.image_detect import get_skill_max_lighting
 from tools.yolo import YoloPredict
 from dnf.action import action

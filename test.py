@@ -1,9 +1,7 @@
 from ultralytics import YOLO
 import numpy as np
-import pyautogui
+from tools.screenshot import get_screenshot
 import cv2
-
-
 
 # 初始化YOLOv8模型
 model = YOLO("model/best.pt")
@@ -11,11 +9,7 @@ model = YOLO("model/best.pt")
 
 # 实时捕获屏幕内容并进行检测
 while True:
-    # 捕获屏幕
-    region = (1410, 875, 1153, 500)
-    screenshot = pyautogui.screenshot(region=region)
-    frame = np.array(screenshot)
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # 转换颜色
+    frame = get_screenshot()
 
     # 使用 YOLOv8 模型进行实时检测
     results = model(frame)

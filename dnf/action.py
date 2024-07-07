@@ -166,8 +166,8 @@ def get_min_monster(self_cord, monster_list):
     return min_monster
 
 
-def get_direction(x, y) -> str:
-    # 根据对角线来划分上下左右
+# 根据顶点对角线来划分上下左右
+def get_direction_by_diagonal(x, y) -> str:
     _, _, w, h = fd.get_default_region()
     # 计算点到对角线1的y值
     y1 = (h / w) * x
@@ -182,33 +182,34 @@ def get_direction(x, y) -> str:
         return "left"
     else:
         return "right"
-    # 根基中心点十字划分上下左右
+
+
+# 根据中心点十字划分上下左右
+def get_direction(x, y) -> str:
+    x_, y_, _, _ = fd.get_default_region()
+    if y < y_:
+        return "up"
+    elif y > y_:
+        return "down"
+    elif x < x_:
+        return "left"
+    elif x > x_:
+        return "right"
 
 
 def existence_need_door(open_door_cord, direction) -> []:
     door_dict = dict()
-    need_door = []
-    # 只检测到了一个门
-    if len(open_door_cord) == 1:
-        if direction == get_direction(open_door_cord[0][0], open_door_cord[0][1]):
-            need_door = open_door_cord[0]
-    # 检测到两个门
-    elif len(open_door_cord) == 2:
-        pass
-    # 检测到三个门
-    elif len(open_door_cord) == 3:
-        pass
-    # 检测到四个门
-    elif len(open_door_cord) == 4:
-        pass
-    return need_door
-
-    # for door in open_door_cord:
-    #     direct = get_direction(door[0], door[1])
-    #     door_dict[direct] = door
-    # if direction in door_dict.keys():
-    #     return door_dict[direction]
-
+    door_dict1 = dict()
+    for door in open_door_cord:
+        x, y = door
+        door_dict[get_direction_by_diagonal(x, y)] = door
+        door_dict1[get_direction(x, y)] = door
+    if direction in door_dict.keys():
+        return door_dict[direction]
+    elif direction in door_dict1.keys():
+        return door_dict1[direction]
+    else:
+        return []
 
 room_class_array = []
 
@@ -275,6 +276,7 @@ def is_black():
     x_center, y_center = fd.get_center_cord()
     frame = fd.screenshot(x_center - 100, y_center - 100, 200, 200)
     total = np.mean(np.array(frame))
+    print("当前的亮度为：" + str(total))
     if total < 20:
         return True
     else:
