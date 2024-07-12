@@ -8,7 +8,8 @@ key_dict_origin = {
     "H": [0.813750, 0.489815, 0.034167, 0.074074],  # 滑动技能
     "C": [0.802500, 0.917130, 0.029167, 0.056481],  # 后跳
     "X": [0.866042, 0.868519, 0.047083, 0.096296],  # 跳跃
-    "B": [0.898750, 0.730556, 0.025000, 0.057407]  # 普攻
+    "B": [0.898750, 0.730556, 0.025000, 0.057407],  # 普攻
+    "M": [0.898750, 0.300556, 0.000000, 0.000000]  # 普攻
 }
 
 adb_skill_dict_origin = {
@@ -62,6 +63,16 @@ def get_cd_skill(choice_type, max_lighting: dict) -> list:
                 current_skill.append(key)
         return current_skill
 
+def get_origin_change(origin_dict: dict) -> dict:
+    _, _, image_width, image_height = get_default_region()
+    skill_dict = dict()
+    for key, data in origin_dict.items():
+        x_center, y_center, width, height = data
+        # 计算真实坐标
+        x = x_center * image_width
+        y = y_center * image_height
+        skill_dict[key] = [x, y]
+    return skill_dict
 
 def skill_change_coordinates(origin_dict: dict) -> dict:
     _, _, image_width, image_height = get_default_region()
@@ -79,28 +90,31 @@ def skill_change_coordinates(origin_dict: dict) -> dict:
         skill_dict[key] = [x_min, y_min, w, h]
     return skill_dict
 
+def get_map_cord() -> []:
+    skill_dict = get_origin_change(key_dict_origin)
+    return skill_dict["M"][0], skill_dict["M"][1]
 
 #   获取轮盘坐标
 def get_move_wheel_cord() -> []:
-    skill_dict = skill_change_coordinates(key_dict_origin)
+    skill_dict = get_origin_change(key_dict_origin)
     return skill_dict["P"][0], skill_dict["P"][1]
 
 
 #   获取普攻
 def get_x_skill_cord() -> []:
-    skill_dict = skill_change_coordinates(key_dict_origin)
+    skill_dict = get_origin_change(key_dict_origin)
     return skill_dict["X"][0], skill_dict["X"][1]
 
 
 #   获取后跳坐标
 def get_c_skill_cord() -> []:
-    skill_dict = skill_change_coordinates(key_dict_origin)
+    skill_dict = get_origin_change(key_dict_origin)
     return skill_dict["C"][0], skill_dict["C"][1]
 
 
 #   获取技能
 def get_skill_cord() -> dict:
-    skill_dict = skill_change_coordinates(adb_skill_dict_origin)
+    skill_dict = get_origin_change(adb_skill_dict_origin)
     center_cord = dict()
     for key, val in skill_dict.items():
         x, y, _, _ = val
@@ -110,7 +124,7 @@ def get_skill_cord() -> dict:
 
 #   获取buff技能
 def get_buff_skill_cord() -> []:
-    skill_dict = skill_change_coordinates()
+    skill_dict = get_origin_change(adb_skill_dict_origin)
     return skill_dict["W"][0], skill_dict["W"][1]
 
 

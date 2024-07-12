@@ -1,4 +1,6 @@
 import time
+
+from image_detect import get_map_cord
 from tools.keword_tool import press_key
 import cv2
 import pyautogui
@@ -6,6 +8,7 @@ import numpy as np
 from tools.screenshot import get_screenshot
 from collections import deque
 from tools.screenshot import get_resolution
+from tools.adb_tool import tap_screen_time
 
 # 通过虫洞投屏软件操作 还是直接操作
 operate_type = 1
@@ -60,17 +63,12 @@ def get_map_region():
 
 
 def get_thumbnail_map() -> []:
-    press_key("M", 0.5)
-    time.sleep(2)
-    x, y, w, h = get_map_region()
-    img = screenshot(x, y, w, h)
-    # 获取亮度
-    return img
-
-
-def get_thumbnail_map_v2() -> []:
-    press_key("M", 0.5)
-    time.sleep(2)
+    if operate_type == 0:
+        press_key("M", 0.5)
+    else:
+        x, y = get_map_cord()
+        tap_screen_time(x, y, 300)
+        time.sleep(2)
     x, y, w, h = get_default_region()
     img = screenshot(x, y, w, h)
     x_center, y_center, width, height = [0.496097, 0.511000, 0.220295, 0.406000]

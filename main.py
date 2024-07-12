@@ -23,7 +23,7 @@ def main():
                 # 捡材料
                 act.pick_material()
             # 如果当前房间是最终的房间，检测是否出现了重新挑战
-            _, total_rooms = get_next_door_direction(None, 0)
+            _, total_rooms = get_next_door_direction(0)
             if current_room_number == total_rooms:
                 # 如果出现了重新挑战且检测不到存在材料
                 rechallenge_cord = ocr.detect_rechallenge()

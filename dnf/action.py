@@ -39,8 +39,7 @@ class action:
                     if len(self_cord) > 0:
                         op.move_to_dest(self_cord, fd.get_center_cord(), 0.2)
                     break
-                # fd.get_thumbnail_map()
-                direct, total_number = get_next_door_direction(None, 0)
+                direct, total_number = get_next_door_direction(0)
                 print("The number of rooms：" + str(total_number))
                 print("next room direction：" + direct)
                 next_door_cord = existence_need_door(x_door, y_door, self_cord, direct)
@@ -274,9 +273,9 @@ def fixation():
     return next_door_direction, len(num_direct)
 
 
-def get_next_door_direction(mag_img, path_type):
+def get_next_door_direction(path_type):
     if path_type == 1:
-        direction, total_number = path_route(mag_img)
+        direction, total_number = path_route(fd.get_thumbnail_map())
     else:
         direction, total_number = fixation()
     return direction, total_number
