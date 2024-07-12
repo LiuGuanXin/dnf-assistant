@@ -19,20 +19,20 @@ class action:
     def move_next_room(self):
         model = self.model
         global current_room_number
-        self_c, _, _, open_door = model.get_cord()
-        if len(self_c) > 0 and len(open_door) > 0:
+        self_c, _, _, x_door, y_door = model.get_cord()
+        if len(self_c) > 0 and (len(x_door) > 0 or len(y_door) > 0):
             while True:
-                print("移动到下一个房间")
-                print("当前是第" + str(current_room_number) + "个房间")
-                self_cord, monster_cord, _, open_door = model.get_cord()
+                print("move to next room")
+                print("The current room is the " + str(current_room_number) + "st room")
+                self_cord, monster_cord, _, x_door, y_door = model.get_cord()
                 close_door_cord = model.get_monster_cord()
                 if len(close_door_cord) > 0 or len(monster_cord) > 0 or is_black():
-                    print("已经移动到下一个房间了")
+                    print("I've moved to the next room")
                     current_room_number += 1
-                    print("当前房间序号：" + str(current_room_number))
+                    print("The current room number：" + str(current_room_number))
                     if current_room_number >= len(num_direct):
                         current_room_number = 1
-                    self_cord, monster_cord, _, open_door = model.get_cord()
+                    self_cord, monster_cord, _, _, _ = model.get_cord()
                     for _ in range(10):
                         if is_black():
                             time.sleep(0.3)
@@ -40,13 +40,14 @@ class action:
                         op.move_to_dest(self_cord, fd.get_center_cord(), 0.2)
                     break
                 # fd.get_thumbnail_map()
-                direct = get_next_door_direction(None, 0)
-                print("下一个房间门的方向：" + direct)
-                next_door_cord = existence_need_door(open_door, direct)
-                print("是否存在可以进入的房间" + str(len(next_door_cord) != 0))
+                direct, total_number = get_next_door_direction(None, 0)
+                print("The number of rooms：" + str(total_number))
+                print("next room direction：" + direct)
+                next_door_cord = existence_need_door(x_door, y_door, self_cord, direct)
+                print("Whether there is a room that can be entered" + str(len(next_door_cord) != 0))
                 if len(next_door_cord) == 0 and len(self_cord) > 0:
                     # 移动寻找门
-                    print("不存在可以进入的房间，移动寻找")
+                    print("There is no room to enter, move to find")
                     op.move_to_dest(self_cord, fd.get_center_cord(), 0.1)
                     continue
                 if len(self_cord) > 0 and len(next_door_cord) > 0:
@@ -61,7 +62,7 @@ class action:
     def gather_monster_move(self):
         model = self.model
         while True:
-            print("走位拉怪")
+            print("move to monster")
             model.predict_img(fd.get_default_img())
             self_cord = model.get_self_cord()
             dest_cord = model.get_left_monster()
@@ -83,8 +84,7 @@ class action:
             monster_cord = model.get_monster_cord()
             close_door_cord = model.get_close_door_cord()
             # 连续3次没检测到则退出
-            if (len(material_cord) == 0 or len(monster_cord) > 0
-                    or len(close_door_cord) == 0):
+            if len(material_cord) == 0 or len(monster_cord) > 0 or len(close_door_cord) == 0:
                 if times > 3:
                     # 检测不到材料 判断是否进入了结束界面  如何判断？
                     # 点击下一局  弹窗则点击不再提醒 确定
@@ -94,9 +94,17 @@ class action:
                     times += 1
             else:
                 times = 0
-            print("捡材料")
+            print("move to material")
             if len(self_cord) > 0 and len(material_cord) > 0:
                 op.move_to_dest(self_cord, material_cord[0])
+
+    def use_buff_skill(self):
+        # 获取可使用技能
+        current_skill_list = get_cd_skill(1, self.skill_max_lighting)
+        if "W" in current_skill_list:
+            op.skill("W", "click")
+        if "E" in current_skill_list:
+            op.skill("E", "click")
 
     def use_random_skill(self):
         # 获取可使用技能
@@ -139,7 +147,6 @@ class action:
                         op.move("right", 0.05)
                     else:
                         op.move("left", 0.05)
-                    # 如何攻击？ 普攻 + 技能的方式
                     op.normal_attack(3)
 
 
@@ -197,19 +204,22 @@ def get_direction(x, y) -> str:
         return "right"
 
 
-def existence_need_door(open_door_cord, direction) -> []:
+def existence_need_door(x_door, y_door, self_cord, direction) -> []:
     door_dict = dict()
-    door_dict1 = dict()
-    for door in open_door_cord:
-        x, y = door
-        door_dict[get_direction_by_diagonal(x, y)] = door
-        door_dict1[get_direction(x, y)] = door
-    if direction in door_dict.keys():
-        return door_dict[direction]
-    elif direction in door_dict1.keys():
-        return door_dict1[direction]
-    else:
-        return []
+    if (direction == "left" or direction == "right") and len(x_door) > 0:
+        for door in x_door:
+            if self_cord[0] > door[0]:
+                door_dict["left"] = door
+            else:
+                door_dict["right"] = door
+    elif (direction == "up" or direction == "down") and len(y_door) > 0:
+        for door in y_door:
+            if self_cord[0] > door[0]:
+                door_dict["up"] = door
+            else:
+                door_dict["down"] = door
+    return door_dict[direction]
+
 
 room_class_array = []
 
@@ -222,7 +232,7 @@ def ana_brightness(image):
     return t_brightness, r_brightness, g_brightness, b_brightness
 
 
-def path_route(img) -> str:
+def path_route(img) -> tuple[str, int]:
     global room_class_array
     # if img is None:
     #     return room_class_array[current_room_number]
@@ -240,7 +250,7 @@ def path_route(img) -> str:
     if current_room_number > len(num_direct) + 1:
         current_room_number = 1
         room_class_array = []
-    return direction
+    return direction, len(direct_list)
 
 
 """房间对应应该进入的门"""
@@ -261,15 +271,15 @@ num_direct = {
 def fixation():
     global current_room_number
     next_door_direction = num_direct[current_room_number]
-    return next_door_direction
+    return next_door_direction, len(num_direct)
 
 
 def get_next_door_direction(mag_img, path_type):
     if path_type == 1:
-        direction = path_route(mag_img)
+        direction, total_number = path_route(mag_img)
     else:
-        direction = fixation()
-    return direction
+        direction, total_number = fixation()
+    return direction, total_number
 
 
 def is_black():
@@ -281,3 +291,17 @@ def is_black():
         return True
     else:
         return False
+
+
+def rechallenge(cord):
+    global current_room_number
+    op.single_click(cord[0], cord[1])
+    current_room_number = 1
+
+
+def confirm_challenge(select_cord, confirm_cord):
+    global current_room_number
+    op.single_click(select_cord[0], select_cord[1])
+    time.sleep(1)
+    op.single_click(confirm_cord[0], confirm_cord[1])
+    current_room_number = 1

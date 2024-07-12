@@ -31,9 +31,10 @@ class YoloPredict:
         # 1: monster
         # 2: closeDoor
         # 3: material
-        # 4: openDoor
+        # 4: xAxisDoor
+        # 5: yAxisDoor
         # 左上角  右下角坐标  置信度 类别
-        self.drawing()
+        # self.drawing()
 
     def get_cord(self):
         # 类别里可以加一个小地图的分类以获取小地图的位置
@@ -41,8 +42,9 @@ class YoloPredict:
         self_cord = self.get_self_cord()
         monster_cord = self.get_monster_cord()
         material_cord = self.get_material_cord()
-        open_door_cord = self.get_open_door_cord()
-        return self_cord, monster_cord, material_cord, open_door_cord
+        x_door_cord = self.get_x_door_cord()
+        y_door_cord = self.get_y_door_cord()
+        return self_cord, monster_cord, material_cord, x_door_cord, y_door_cord
 
     """获取自身坐标"""
 
@@ -85,12 +87,22 @@ class YoloPredict:
                 material_cord_list.append([x, y])
         return material_cord_list
 
-    """获取打开的门坐标"""
+    """获取打开的x轴门坐标"""
 
-    def get_open_door_cord(self):
+    def get_x_door_cord(self):
         open_door_cord_list = list()
         for item in self.data:
             if item[5] == 4 and item[4] > 0.4:
+                x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
+                open_door_cord_list.append([x, y])
+        return open_door_cord_list
+
+    """获取打开的y轴门坐标"""
+
+    def get_y_door_cord(self):
+        open_door_cord_list = list()
+        for item in self.data:
+            if item[5] == 5 and item[4] > 0.4:
                 x, y = (item[0] + item[2]) / 2, (item[1] + item[3]) / 2
                 open_door_cord_list.append([x, y])
         return open_door_cord_list

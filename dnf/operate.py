@@ -149,9 +149,5 @@ def normal_attack(times):
     time.sleep(1)
 
 
-def again():
-    single_click(0, 0)
-
-
 def opened_reward():
     single_click(0, 0)
