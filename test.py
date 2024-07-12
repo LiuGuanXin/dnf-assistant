@@ -1,5 +1,4 @@
 from ultralytics import YOLO
-import numpy as np
 from tools.screenshot import get_screenshot
 import cv2
 
